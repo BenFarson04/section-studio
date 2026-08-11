@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+ *  index.html
+ *
+ *  Main entry page for Section Studio – the beam calculator
+ *  and steel section design environment.
+ *
+ *  Layout:   Topbar  |  Sidebar (inputs)  |  Stage (canvas)
+ *                                         |  Results + Design
+ *
+ *  Dependencies:  pdf-lib  (CDN)
+ *                 style.css
+ *                 js/main.js  (module)
+ * ╚══════════════════════════════════════════════════════════╝ -->
+
+
+<!-- ═══════════════════════════════════════════════════════════
+  HEAD
+═══════════════════════════════════════════════════════════ -->
+<head>
+
+  <!-- ─── Document meta ──────────────────────────────────── -->
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Section Studio</title>
+
+  <!-- ─── Stylesheet ─────────────────────────────────────── -->
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- ─── Third-party libraries ──────────────────────────── -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+
+  
+
+</head>
+
+
+<!-- ═══════════════════════════════════════════════════════════
+  BODY
+═══════════════════════════════════════════════════════════ -->
+<body>
+
+  <!-- ─── Decorative background ──────────────────────────── -->
+  <div class="bg-paper" aria-hidden="true"></div>
+
+
+  <!-- ─── Top bar / brand ────────────────────────────────── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">∫</div>
+      <div class="brand-text">
+        <div class="brand-title">Section Studio</div>
+        <div class="brand-subtitle">Quick section analysis · clean diagrams · instant results</div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+    WORKSPACE  (3-column layout)
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="workspace">
+
+    <!-- ─────────────────────────────────────────────────────
+      LEFT  ·  Controls / Model inputs
+    ───────────────────────────────────────────────────────── -->
+    <aside class="sidebar">
+
+      <!-- ·· Intro card ········································ -->
+      <section class="card card--intro">
+        <h2 class="card-title">Model inputs</h2>
+        <p class="muted">
+          Add supports and loads, then hit <strong>Calculate</strong>.
+          Selected table rows highlight for delete.
+        </p>
+      </section>
+
+
+      <!-- ·· Span (length) ····································· -->
+      <details class="accordion">
+        <summary class="accordion-summary">
+          <span class="accordion-title">Span</span>
+          <span class="accordion-meta">Geometry</span>
+        </summary>
+
+        <div class="accordion-body">
+          <div class="grid-2">
+            <div class="field">
+              <label for="length">Length (m)</label>
+              <input type="number" id="length" value="5" required />
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <button type="button" class="btn btn--primary" onclick="updateLength()">
+                Update length
+              </button>
+            </div>
+          </div>
+        </div>
+      </details>
+
+
+      <!-- ·· Supports ·········································· -->
+      <details class="accordion">
+        <summary class="accordion-summary">
+          <span class="accordion-title">Supports</span>
+          <span class="accordion-meta">Restraints</span>
+        </summary>
+
+        <div class="accordion-body">
+          <div class="table-wrap">
+            <table id="supportsTable">
+              <thead>
+                <tr>
+                  <th>Location (m)</th>
+                  <th>Type</th>
+                </tr>
+              </thead>
+              <tbody id="supportsTbody">
+                <tr class="support-input-row">
+                  <td><input type="number" step="0.1" placeholder="e.g. 0.0" /></td>
+                  <td>
+                    <select required>
+                      <option value="Fixed">Fixed</option>
+                      <option value="Pinned">Pinned</option>
+                      <option value="Roller">Roller</option>
+                    </select>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn--primary" onclick="addSupportFromTable()">Add</button>
+            <button type="button" class="btn btn--danger"  id="deleteSupportsBtn" onclick="deleteSelectedSupports()" disabled>Delete</button>
+            <button type="button" class="btn btn--ghost"   onclick="clearSupports()">Clear</button>
+          </div>
+        </div>
+      </details>
+
+
+      <!-- ·· Loads  (UDLs + Point loads) ······················· -->
+      <details class="accordion">
+        <summary class="accordion-summary">
+          <span class="accordion-title">Loads</span>
+          <span class="accordion-meta">Actions ( + is downward )</span>
+        </summary>
+
+        <div class="accordion-body">
+
+          <!-- ·· UDLs ········································· -->
+          <div class="subhead"><h3>UDLs</h3></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Start (m)</th>
+                  <th>End (m)</th>
+                  <th>Start (kN/m)</th>
+                  <th>End (kN/m)</th>
+                </tr>
+              </thead>
+              <tbody id="udlTbody">
+                <tr class="udl-input-row">
+                  <td><input type="number" step="0.1" placeholder="e.g. 0.0"  /></td>
+                  <td><input type="number" step="0.1" placeholder="e.g. 5.0"  /></td>
+                  <td><input type="number" step="0.1" placeholder="e.g. 10.0" /></td>
+                  <td><input type="number" step="0.1" placeholder="e.g. 10.0" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn--primary" onclick="addUDLFromTable()">Add</button>
+            <button type="button" class="btn btn--danger"  id="deleteUDLsBtn" onclick="deleteSelectedUDLs()" disabled>Delete</button>
+            <button type="button" class="btn btn--ghost"   onclick="clearUDLs()">Clear</button>
+          </div>
+
+          <div class="divider"></div>
+
+          <!-- ·· Point loads ·································· -->
+          <div class="subhead"><h3>Point loads</h3></div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Location (m)</th>
+                  <th>Load (kN)</th>
+                </tr>
+              </thead>
+              <tbody id="pointLoadTbody">
+                <tr class="point-load-input-row">
+                  <td><input type="number" step="0.01" placeholder="e.g. 2.50" /></td>
+                  <td><input type="number" step="0.01" placeholder="e.g. 15.0" /></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="btn-row">
+            <button type="button" class="btn btn--primary" onclick="addPointLoadFromTable()">Add</button>
+            <button type="button" class="btn btn--danger"  id="deletePointLoadsBtn" onclick="deleteSelectedPointLoads()" disabled>Delete</button>
+            <button type="button" class="btn btn--ghost"   onclick="clearPointLoads()">Clear</button>
+          </div>
+
+        </div>
+      </details>
+
+    </aside>
+
+
+    <!-- ─────────────────────────────────────────────────────
+      MIDDLE  ·  Visualisation / Stage
+    ───────────────────────────────────────────────────────── -->
+    <section class="stage">
+      <section class="card card--stage">
+
+        <!-- ·· Stage header ··································· -->
+        <div class="stage-head">
+          <div>
+            <h2 class="card-title">Visualisation</h2>
+
+            <div class="topbar-actions">
+              <div class="status-pill" title="Stability / solver feedback">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="stabilityResult" class="status-text">Ready</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-actions">
+            <button type="button" class="calculate-btn" onclick="calculate()">
+              Calculate
+            </button>
+          </div>
+        </div>
+
+        <!-- ·· Canvas ········································· -->
+        <div class="canvas-shell">
+          <canvas id="beamCanvas"></canvas>
+        </div>
+
+      </section>
+    </section>
+
+
+    <!-- ─────────────────────────────────────────────────────
+      RIGHT  ·  Results + Design
+    ───────────────────────────────────────────────────────── -->
+    <aside class="results">
+
+      <!-- ·· Results card ··································· -->
+      <section class="card">
+        <h2 class="card-title">Results</h2>
+
+        <!-- ·· Support reactions ··························· -->
+        <div class="results-group">
+          <h3>Support reactions</h3>
+          <div class="table-wrap">
+            <table id="reactionsTable">
+              <thead>
+                <tr>
+                  <th>Support</th>
+                  <th>Location (m)</th>
+                  <th>Vertical reaction (kN)</th>
+                  <th>Moment (kNm)</th>
+                </tr>
+              </thead>
+              <tbody id="reactionsTbody">
+                <tr>
+                  <td colspan="4" class="empty">No results calculated</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <!-- ·· Diagram extremes ···························· -->
+        <div class="results-group">
+          <h3>Diagram extremes</h3>
+          <div class="table-wrap">
+            <table id="extremesTable">
+              <thead>
+                <tr>
+                  <th>Quantity</th>
+                  <th>Max +</th>
+                  <th>x (m)</th>
+                  <th>Max −</th>
+                  <th>x (m)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Shear V (kN)</td>
+                  <td id="VmaxPos">-</td>
+                  <td id="VmaxPosX">-</td>
+                  <td id="VmaxNeg">-</td>
+                  <td id="VmaxNegX">-</td>
+                </tr>
+                <tr>
+                  <td>Moment M (kNm)</td>
+                  <td id="MmaxPos">-</td>
+                  <td id="MmaxPosX">-</td>
+                  <td id="MmaxNeg">-</td>
+                  <td id="MmaxNegX">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <!-- ·· Design card ···································· -->
+      <section class="card">
+        <h2 class="card-title">Design</h2>
+
+        <div class="design-mode">
+
+          <!-- ·· Manual Design ···························· -->
+          <a href="manualDesigner.html" class="design-link">
+            <button type="button" class="design-btn design-btn--manual" id="manualDesignBtn">
+              <span class="design-btn__icon" aria-hidden="true">
+                <svg viewBox="0 0 64 64" width="40" height="40">
+                  <!-- ·· Ruler ·· -->
+                  <rect x="10" y="14" width="14" height="36" rx="2"
+                        fill="none" stroke="currentColor" stroke-width="2.5"/>
+                  <path d="M14 20h6M14 26h4M14 32h6M14 38h4M14 44h6"
+                        stroke="currentColor" stroke-width="2"/>
+                  <!-- ·· Pencil ·· -->
+                  <path d="M42 16L50 24L28 46L20 48L22 40Z"
+                        fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                  <path d="M38 20L46 28"
+                        stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </span>
+              <span class="design-btn__text">
+                <span class="design-btn__title">Manual Design</span>
+              </span>
+            </button>
+          </a>
+
+          <!-- ·· Design Explorer ·························· -->
+          <button type="button" class="design-btn design-btn--explorer" id="explorerDesignBtn">
+            <span class="design-btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" width="40" height="40">
+                <!-- ·· Axes ·· -->
+                <path d="M12 12V52H52"
+                      fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <!-- ·· Trend line ·· -->
+                <path d="M18 42L28 34L38 28L48 18"
+                      fill="none" stroke="currentColor" stroke-width="2.5"
+                      stroke-linecap="round" stroke-linejoin="round"/>
+                <!-- ·· Data points ·· -->
+                <circle cx="18" cy="42" r="3.5" fill="currentColor"/>
+                <circle cx="28" cy="34" r="3.5" fill="currentColor"/>
+                <circle cx="38" cy="28" r="3.5" fill="currentColor"/>
+                <circle cx="48" cy="18" r="3.5" fill="currentColor"/>
+              </svg>
+            </span>
+            <span class="design-btn__text">
+              <span class="design-btn__title">Design Explorer</span>
+            </span>
+          </button>
+
+        </div>
+      </section>
+
+    </aside>
+
+  </main>
+
+
+  <!-- ─── Footer ─────────────────────────────────────────── -->
+  <footer class="footer">
+    <span class="muted small">
+      Beam Calculator by Ben Farson, 2026. For educational use only; not for actual design.
+    </span>
+  </footer>
+
+
+  <!-- ─── Coming Soon Modal ───────────────────────────────── -->
+  <div class="modal-overlay" id="comingSoonModal" hidden>
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="comingSoonTitle">
+      <h2 class="modal__title" id="comingSoonTitle">Coming Soon</h2>
+      <p class="modal__subtitle">
+        Design Explorer is currently in development and will be available in a future update.
+      </p>
+
+      <div class="modal__actions">
+        <button type="button" class="modal__btn modal__btn--go" id="comingSoonCloseBtn">
+          Okay
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── App entry point ────────────────────────────────── -->
+  <script type="module" src="../js/main.js"></script>
+
+</body>
+</html>
+
+
+
