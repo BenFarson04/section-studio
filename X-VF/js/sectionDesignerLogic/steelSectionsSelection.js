@@ -53,8 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ─── Section Type Registry ────────────────────────────── */
 
   const sectionTypes = {
-    UB:  { path: "../../references/bluebook/ubSections/ubSections.csv",   data: [], loader: loadSections },
-    UC:  { path: "../../references/bluebook/ucSections/ucSections.csv",   data: [], loader: loadSections },
+    UB:  { path: "../../../references/bluebook/ubSections/ubSections.csv",   data: [], loader: loadSections },
+    UC:  { path: "../../../../references/bluebook/ucSections/ucSections.csv",   data: [], loader: loadSections },
     PFC: { path: "../../references/bluebook/pfcSections/pfcSections.csv", data: [], loader: loadSections },
     EA:  { path: "../../references/bluebook/angleSections/eaSections/eaSections.csv",   data: [], loader: loadSections },
     UA:  { path: "../../references/bluebook/angleSections/uaSections/uaSections.csv",   data: [], loader: loadSections },
