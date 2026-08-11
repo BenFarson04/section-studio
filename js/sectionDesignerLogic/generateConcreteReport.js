@@ -894,7 +894,7 @@ export async function generateConcreteReport() {
 
     /* ─── PDF Template & Font Embedding ────────────────────── */
 
-    const templateBytes = await fetch("../../../references/pdfTemplate.pdf")
+    const templateBytes = await fetch("../references/pdfTemplate.pdf")
       .then((r) => r.arrayBuffer());
 
     const pdfDoc = await PDFDocument.load(templateBytes);
