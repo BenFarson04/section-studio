@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!-- ╔══════════════════════════════════════════════════════════╗
+ *  manualDesigner.html
+ *
+ *  Manual section design page for Section Studio.
+ *  User picks a material (steel / concrete), a section type
+ *  and a specific section from the catalogue, then runs the
+ *  analysis to see utilisations and export an EN 1993-1-1
+ *  design-check PDF report.
+ * ╚══════════════════════════════════════════════════════════╝ -->
+
+
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manual Designer</title>
+
+  <!-- ─── Stylesheet ─────────────────────────────────────── -->
+  <link rel="stylesheet" href="../style.css" />
+
+  <!-- ─── Third-party libraries ──────────────────────────── -->
+  <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
+</head>
+
+
+
+<body>
+
+  <div class="bg-paper" aria-hidden="true"></div>
+
+
+  <!-- ─── Top bar ────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">∫</div>
+      <div class="brand-text">
+        <div class="brand-title">Section Studio</div>
+        <div class="brand-subtitle">Quick section analysis · clean diagrams · instant results</div>
+      </div>
+    </div>
+
+    <a href="index.html" class="back-link">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+        <path d="M12.7 4.3a1 1 0 0 1 0 1.4L8.4 10l4.3 4.3a1 1 0 0 1-1.4 1.4l-5-5a1 1 0 0 1 0-1.4l5-5a1 1 0 0 1 1.4 0z"
+              fill="currentColor"/>
+      </svg>
+      Back to beam
+    </a>
+  </header>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+    WORKSPACE
+  ═══════════════════════════════════════════════════════════ -->
+  <main class="workspace">
+
+    <!-- ─── LEFT · Controls ───────────────────────────────── -->
+    <aside class="sidebar">
+
+      <!-- ·· Material card ································· -->
+      <section class="card">
+        <h2 class="card-title">Material</h2>
+
+        <div class="design-mode" role="group" aria-label="Design material selection">
+
+          <button
+            type="button"
+            class="design-btn design-btn--steel is-active"
+            id="steelDesignBtn"
+            aria-pressed="true"
+          >
+            <span class="design-btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" width="40" height="40" role="img" aria-label="Steel I-section">
+                <path d="M14 10h36v6H34v32h16v6H14v-6h16V16H14z"
+                      fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="miter"/>
+              </svg>
+            </span>
+            <span class="design-btn__text">
+              <span class="design-btn__title">Steel design</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            class="design-btn design-btn--concrete"
+            id="concreteDesignBtn"
+            aria-pressed="false"
+          >
+            <span class="design-btn__icon" aria-hidden="true">
+              <svg viewBox="0 0 64 64" width="40" height="40" role="img" aria-label="Concrete RC section">
+                <rect x="12" y="12" width="40" height="40" rx="3"
+                      fill="none" stroke="currentColor" stroke-width="3"/>
+                <g opacity="0.25" stroke="currentColor" stroke-width="2">
+                  <path d="M14 48L48 14"/>
+                  <path d="M20 52L52 20"/>
+                  <path d="M12 38L38 12"/>
+                  <path d="M26 56L56 26"/>
+                </g>
+                <g fill="currentColor">
+                  <circle cx="20" cy="20" r="3"/>
+                  <circle cx="44" cy="20" r="3"/>
+                  <circle cx="20" cy="44" r="3"/>
+                  <circle cx="44" cy="44" r="3"/>
+                </g>
+              </svg>
+            </span>
+            <span class="design-btn__text">
+              <span class="design-btn__title">Concrete design</span>
+            </span>
+          </button>
+
+        </div>
+
+        <input type="hidden" id="designMaterial" value="steel" />
+      </section>
+
+
+      <!-- ·· Section selector accordion ···················· -->
+      <details class="accordion" open>
+
+        <summary class="accordion-summary">
+          <span class="accordion-title" id="sectionAccordionTitle">Section selection</span>
+          <span class="accordion-meta" id="sectionAccordionMeta">Steel catalogue</span>
+        </summary>
+
+        <div class="accordion-body">
+
+          <!-- ═══════════════════════════════════════════════════════
+            STEEL INPUTS
+          ═══════════════════════════════════════════════════════════ -->
+          <div id="steelInputsPanel">
+
+            <div class="field">
+              <label for="steelGradeSelect">Steel Grade</label>
+              <select id="steelGradeSelect">
+                <!-- populated by steelGradesSelection.js via main.js -->
+              </select>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="field">
+              <label for="sectionTypeSelect">Section Type</label>
+              <select id="sectionTypeSelect">
+                <option value="">-- Select Section Type --</option>
+                <option value="UB">Universal Beam (UB)</option>
+                <option value="UC">Universal Column (UC)</option>
+                <option value="PFC">Parallel Flange Channel (PFC)</option>
+                <option value="EA">Equal Angles</option>
+                <option value="UA">Unequal Angles</option>
+                <option value="SHS">Square Hollow Section (SHS)</option>
+                <option value="RHS">Rectangular Hollow Section (RHS)</option>
+                <option value="CHS">Circular Hollow Section (CHS)</option>
+              </select>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="field">
+              <label>Section</label>
+              <div id="sectionContainer" class="section-container">
+                <span class="muted small">No section type selected</span>
+              </div>
+
+              <div id="selectedSectionDisplay" class="selected-section-display">
+                No section selected
+              </div>
+            </div>
+
+          </div>
+
+
+          <!-- ═══════════════════════════════════════════════════════
+            CONCRETE INPUTS
+          ═══════════════════════════════════════════════════════════ -->
+          <div id="concreteInputsPanel" hidden>
+
+            <div class="field">
+              <label for="concreteGradeSelect">Concrete Grade</label>
+              <select id="concreteGradeSelect">
+                <option value="C20/25">C20/25</option>
+                <option value="C25/30">C25/30</option>
+                <option value="C28/35">C28/35</option>
+                <option value="C30/37" selected>C30/37</option>
+                <option value="C32/40">C32/40</option>
+                <option value="C35/45">C35/45</option>
+                <option value="C40/50">C40/50</option>
+                <option value="C45/55">C45/55</option>
+                <option value="C50/60">C50/60</option>
+              </select>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid-2">
+
+              <div class="field">
+                <label for="concreteWidth">Width, b (mm)</label>
+                <input type="number" id="concreteWidth" min="1" step="1" value="300" />
+              </div>
+
+              <div class="field">
+                <label for="concreteDepth">Depth, h (mm)</label>
+                <input type="number" id="concreteDepth" min="1" step="1" value="500" />
+              </div>
+
+              <div class="field">
+                <label for="concreteCover">Cover (mm)</label>
+                <input type="number" id="concreteCover" min="0" step="1" value="35" />
+              </div>
+
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="grid-2">
+
+              <div class="field">
+                <label for="linkDiameter">Link Diameter (mm)</label>
+                <select id="linkDiameter">
+                  <option value="6">H6</option>
+                  <option value="8" selected>H8</option>
+                  <option value="10">H10</option>
+                  <option value="12">H12</option>
+                  <option value="16">H16</option>
+                </select>
+              </div>
+
+              <div class="field">
+                <label for="linkSpacing">Link Spacing (mm)</label>
+                <input type="number" id="linkSpacing" min="1" step="5" value="200" />
+              </div>
+
+            </div>
+
+            <div class="divider"></div>
+
+
+            <!-- ═════════════════════════════════════════════════════
+              TOP REINFORCEMENT
+            ══════════════════════════════════════════════════════ -->
+            <div class="subhead">
+              <h3>Top reinforcement</h3>
+            </div>
+
+            <div class="table-wrap">
+              <table id="topBarsTable">
+                <thead>
+                  <tr>
+                    <th>Layer</th>
+                    <th>No. of bars</th>
+                    <th>Bar diameter</th>
+                  </tr>
+                </thead>
+                <tbody id="topBarsTbody">
+                  <tr class="bar-layer-row" data-bar-zone="top">
+                    <td class="bar-layer-index">1</td>
+                    <td>
+                      <input type="number" min="0" step="1" value="2" />
+                    </td>
+                    <td>
+                      <select>
+                        <option value="8">H8</option>
+                        <option value="10">H10</option>
+                        <option value="12">H12</option>
+                        <option value="16" selected>H16</option>
+                        <option value="20">H20</option>
+                        <option value="25">H25</option>
+                        <option value="32">H32</option>
+                        <option value="40">H40</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" id="addTopBarLayerBtn">
+                Add layer
+              </button>
+              <button type="button" class="btn btn--danger" id="deleteTopBarLayerBtn" disabled>
+                Delete
+              </button>
+              <button type="button" class="btn btn--ghost" id="clearTopBarLayersBtn">
+                Clear
+              </button>
+            </div>
+
+            <div class="divider"></div>
+
+
+            <!-- ═════════════════════════════════════════════════════
+              BOTTOM REINFORCEMENT
+            ══════════════════════════════════════════════════════ -->
+            <div class="subhead">
+              <h3>Bottom reinforcement</h3>
+            </div>
+
+            <div class="table-wrap">
+              <table id="bottomBarsTable">
+                <thead>
+                  <tr>
+                    <th>Layer</th>
+                    <th>No. of bars</th>
+                    <th>Bar diameter</th>
+                  </tr>
+                </thead>
+                <tbody id="bottomBarsTbody">
+                  <tr class="bar-layer-row" data-bar-zone="bottom">
+                    <td class="bar-layer-index">1</td>
+                    <td>
+                      <input type="number" min="0" step="1" value="2" />
+                    </td>
+                    <td>
+                      <select>
+                        <option value="8">H8</option>
+                        <option value="10">H10</option>
+                        <option value="12">H12</option>
+                        <option value="16" selected>H16</option>
+                        <option value="20">H20</option>
+                        <option value="25">H25</option>
+                        <option value="32">H32</option>
+                        <option value="40">H40</option>
+                      </select>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="btn-row">
+              <button type="button" class="btn btn--primary" id="addBottomBarLayerBtn">
+                Add layer
+              </button>
+              <button type="button" class="btn btn--danger" id="deleteBottomBarLayerBtn" disabled>
+                Delete
+              </button>
+              <button type="button" class="btn btn--ghost" id="clearBottomBarLayersBtn">
+                Clear
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </details>
+
+    </aside>
+
+
+    <!-- ─── MIDDLE · Stage ───────────────────────────────── -->
+    <section class="stage">
+      <section class="card card--stage">
+
+        <div class="stage-head">
+          <div>
+            <h2 class="card-title">Visualisation</h2>
+
+            <div class="topbar-actions">
+              <div class="status-pill" title="Stability / solver feedback">
+                <span class="status-dot" aria-hidden="true"></span>
+                <span id="stabilityResult" class="status-text">Ready</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stage-actions">
+            <button type="button" class="calculate-btn" onclick="calculate()">
+              Calculate
+            </button>
+          </div>
+        </div>
+
+        <div class="canvas-shell">
+          <canvas id="beamCanvas"></canvas>
+        </div>
+
+      </section>
+    </section>
+
+
+    <!-- ─── RIGHT · Results ──────────────────────────────── -->
+    <aside class="results">
+
+      <section class="card">
+        <h2 class="card-title">Results</h2>
+
+        <div class="results-group">
+          <h3>Support reactions</h3>
+          <div class="table-wrap">
+            <table id="reactionsTable">
+              <thead>
+                <tr>
+                  <th>Support</th>
+                  <th>Location (m)</th>
+                  <th>Vertical reaction (kN)</th>
+                  <th>Moment (kNm)</th>
+                </tr>
+              </thead>
+              <tbody id="reactionsTbody">
+                <tr>
+                  <td colspan="4" class="empty">No results calculated</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="results-group">
+          <h3>Diagram extremes</h3>
+          <div class="table-wrap">
+            <table id="extremesTable">
+              <thead>
+                <tr>
+                  <th>Quantity</th>
+                  <th>Max +</th>
+                  <th>x (m)</th>
+                  <th>Max −</th>
+                  <th>x (m)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Shear V (kN)</td>
+                  <td id="VmaxPos">-</td>
+                  <td id="VmaxPosX">-</td>
+                  <td id="VmaxNeg">-</td>
+                  <td id="VmaxNegX">-</td>
+                </tr>
+                <tr>
+                  <td>Moment M (kNm)</td>
+                  <td id="MmaxPos">-</td>
+                  <td id="MmaxPosX">-</td>
+                  <td id="MmaxNeg">-</td>
+                  <td id="MmaxNegX">-</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+
+      <section class="card">
+        <h2 class="card-title">Utilisation</h2>
+        <div id="utilisationContainer">
+          <p class="muted small">
+            Select a UB/UC section and run analysis to see utilisations.
+          </p>
+        </div>
+      </section>
+
+
+      <section class="card card--report">
+        <h2 class="card-title">Export</h2>
+        <p class="muted small" style="margin-bottom:.75rem">
+          Generate a detailed design check report on your title block.
+        </p>
+        <button type="button" class="report-btn" id="generateReportBtn">
+          <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true"
+               fill="none" stroke="currentColor" stroke-width="1.6"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 2h5l5 5v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1z"/>
+            <polyline points="11 2 11 7 16 7"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <polyline points="7 14 10 17 13 14"/>
+          </svg>
+          Generate Report
+        </button>
+      </section>
+
+    </aside>
+
+  </main>
+
+
+  <footer class="footer">
+    <span class="muted small">
+      Beam Calculator by Ben Farson, 2026. For educational use only; not for actual design.
+    </span>
+  </footer>
+
+
+  <!-- ─── App entry point ────────────────────────────────── -->
+  <script type="module" src="../js/main.js"></script>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+    REPORT DETAILS MODAL
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="modal-overlay" id="reportModal" hidden>
+    <div class="modal" role="dialog" aria-labelledby="modalTitle">
+
+      <h2 class="modal__title" id="modalTitle">Report details</h2>
+      <p class="modal__subtitle muted small">
+        Fill in the title-block fields. These are saved for next time.
+      </p>
+
+      <form id="reportForm" class="modal__form">
+
+        <div class="modal__row">
+          <div class="modal__field modal__field--wide">
+            <label for="rf_jobTitle">Job Title</label>
+            <input id="rf_jobTitle" type="text" />
+          </div>
+          <div class="modal__field">
+            <label for="rf_jobNo">Job No.</label>
+            <input id="rf_jobNo" type="text" placeholder="e.g. 12345" />
+          </div>
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label for="rf_rev">Revision</label>
+            <input id="rf_rev" type="text" placeholder="e.g. P01" />
+          </div>
+          <div class="modal__field modal__field--wide">
+            <label for="rf_memberLoc">Member / Location</label>
+            <input id="rf_memberLoc" type="text" placeholder="e.g. B1-01 / Level 3" />
+          </div>
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label for="rf_drgRef">Drg. Ref</label>
+            <input id="rf_drgRef" type="text" placeholder="e.g. SK-001" />
+          </div>
+          <div class="modal__field">
+            <label for="rf_madeBy">Made by</label>
+            <input id="rf_madeBy" type="text" placeholder="e.g. JB" />
+          </div>
+        </div>
+
+        <div class="modal__row">
+          <div class="modal__field">
+            <label for="rf_date">Date</label>
+            <input id="rf_date" type="date" />
+          </div>
+          <div class="modal__field">
+            <label for="rf_chd">Checked by</label>
+            <input id="rf_chd" type="text" placeholder="e.g. JB" />
+          </div>
+        </div>
+
+        <div class="modal__actions">
+          <button type="button" class="modal__btn modal__btn--cancel" id="reportCancel">
+            Cancel
+          </button>
+          <button type="submit" class="modal__btn modal__btn--go">
+            Generate
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</body>
+</html>
