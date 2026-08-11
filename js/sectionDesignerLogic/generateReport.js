@@ -446,7 +446,7 @@ export async function generateReport() {
 
   /* ─── PDF Template & Font Embedding ────────────────────── */
 
-  const templateBytes = await fetch("../../../references/pdfTemplate.pdf").then(r => r.arrayBuffer());
+  const templateBytes = await fetch("../references/pdfTemplate.pdf").then(r => r.arrayBuffer());
   const pdfDoc  = await PDFDocument.load(templateBytes);
   const templateDoc = await PDFDocument.load(templateBytes);
   const extraPages  = await pdfDoc.copyPages(templateDoc, Array(10).fill(0));
