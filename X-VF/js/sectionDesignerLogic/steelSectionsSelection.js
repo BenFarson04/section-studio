@@ -53,14 +53,14 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ─── Section Type Registry ────────────────────────────── */
 
   const sectionTypes = {
-    UB:  { path: "../../../references/bluebook/ubSections/ubSections.csv",   data: [], loader: loadSections },
-    UC:  { path: "../../../references/bluebook/ucSections/ucSections.csv",   data: [], loader: loadSections },
-    PFC: { path: "../../../references/bluebook/pfcSections/pfcSections.csv", data: [], loader: loadSections },
-    EA:  { path: "../../../references/bluebook/angleSections/eaSections/eaSections.csv",   data: [], loader: loadSections },
-    UA:  { path: "../../../references/bluebook/angleSections/uaSections/uaSections.csv",   data: [], loader: loadSections },
-    SHS: { path: "../../../references/bluebook/shsSections/shsSections.csv", data: [], loader: loadHollowSections },
-    RHS: { path: "../../../references/bluebook/rhsSections/rhsSections.csv", data: [], loader: loadHollowSections },
-    CHS: { path: "../../../references/bluebook/chsSections/chsSections.csv", data: [], loader: loadCircularSections },
+    UB:  { path: "../../references/bluebook/ubSections/ubSections.csv",   data: [], loader: loadSections },
+    UC:  { path: "../../references/bluebook/ucSections/ucSections.csv",   data: [], loader: loadSections },
+    PFC: { path: "../../references/bluebook/pfcSections/pfcSections.csv", data: [], loader: loadSections },
+    EA:  { path: "../../references/bluebook/angleSections/eaSections/eaSections.csv",   data: [], loader: loadSections },
+    UA:  { path: "../../references/bluebook/angleSections/uaSections/uaSections.csv",   data: [], loader: loadSections },
+    SHS: { path: "../../references/bluebook/shsSections/shsSections.csv", data: [], loader: loadHollowSections },
+    RHS: { path: "../../references/bluebook/rhsSections/rhsSections.csv", data: [], loader: loadHollowSections },
+    CHS: { path: "../../references/bluebook/chsSections/chsSections.csv", data: [], loader: loadCircularSections },
   };
 
   /* ─── Parallel CSV Loading ─────────────────────────────── */
