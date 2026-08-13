@@ -93,6 +93,8 @@ export function restoreBendingFromSession() {
 function momentAt(x, reactionResult) {
   let M = 0;
 
+  const isCantilever = reactionResult.type === "cantilever";
+
   if (isCantilever) {
     /*
      * Cantilever:
