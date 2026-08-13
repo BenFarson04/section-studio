@@ -114,10 +114,18 @@ export function calculateConcreteSection(
 
   const moments = getDesignMoments(bendingResult);
 
+  /*
+   * Sagging:
+   *   - positive moment
+   *   - bottom reinforcement is tension steel
+   *   - top reinforcement is compression steel
+   */
   const sagging = checkConcreteBending({
     label: "Sagging",
     momentType: "sagging",
-    moment: moments.maxSaggingMoment,
+    tensionFace: "bottom",
+    compressionFace: "top",
+    moment: Math.abs(moments.maxSaggingMoment),
     width: section.width,
     depth: section.depth,
     effectiveDepth: effectiveDepths.sagging.effectiveDepth,
@@ -130,21 +138,30 @@ export function calculateConcreteSection(
     options
   });
 
-  const hogging = checkConcreteBending({
-    label: "Hogging",
-    momentType: "hogging",
-    moment: Math.abs(moments.maxHoggingMoment),
-    width: section.width,
-    depth: section.depth,
-    effectiveDepth: effectiveDepths.hogging.effectiveDepth,
-    compressionSteelDepth: effectiveDepths.sagging.reinforcementCentroidFromBottom,
-    tensionSteelProvided: provided.top.totalArea,
-    compressionSteelProvided: provided.bottom.totalArea,
-    tensionLayers: provided.top.layers,
-    compressionLayers: provided.bottom.layers,
-    material,
-    options
-  });
+  /*
+   * Hogging:
+   *   - negative moment
+   *   - top reinforcement is tension steel
+   *   - bottom reinforcement is compression steel
+   */
+const hogging = checkConcreteBending({
+  label: "Hogging",
+  momentType: "hogging",
+  tensionFace: "top",
+  compressionFace: "bottom",
+  moment: Math.abs(moments.maxHoggingMoment),
+  width: section.width,
+  depth: section.depth,
+  effectiveDepth: effectiveDepths.hogging.effectiveDepth,
+  compressionSteelDepth: effectiveDepths.sagging.reinforcementCentroidFromBottom,
+  tensionSteelProvided: provided.top.totalArea,
+  compressionSteelProvided: provided.bottom.totalArea,
+  tensionLayers: provided.top.layers,
+  compressionLayers: provided.bottom.layers,
+  material,
+  options
+});
+
 
   return {
     isValid: true,
@@ -175,6 +192,7 @@ export function calculateConcreteSection(
     notes: getSectionCalcNotes(sagging, hogging, moments)
   };
 }
+
 
 
 
@@ -360,6 +378,8 @@ function checkConcreteBending(input) {
   const {
     label,
     momentType,
+    tensionFace,
+    compressionFace,
     moment,
     width,
     depth,
@@ -498,6 +518,8 @@ function checkConcreteBending(input) {
 
     label,
     momentType,
+    tensionFace,
+    compressionFace,
 
     moment: {
       inputMoment: moment,
@@ -759,10 +781,47 @@ function getDesignMoments(bendingResult) {
     };
   }
 
-  const direct = getDirectMomentValues(bendingResult);
+  const metaSagging = firstFiniteNumber([
+    bendingResult.meta?.maxPos?.value,
+    bendingResult.maxSaggingMoment,
+    bendingResult.maximumSaggingMoment,
+    bendingResult.maxSagging,
+    bendingResult.saggingMax
+  ]);
 
-  if (direct.hasResult) {
-    return direct;
+  const metaHogging = firstFiniteNumber([
+    bendingResult.meta?.maxNeg?.value,
+    bendingResult.maxHoggingMoment,
+    bendingResult.maximumHoggingMoment,
+    bendingResult.maxHogging,
+    bendingResult.hoggingMax
+  ]);
+
+  if (metaSagging != null || metaHogging != null) {
+    const maxSaggingMoment = metaSagging != null && metaSagging > 0
+      ? metaSagging
+      : 0;
+
+    const maxHoggingMoment = metaHogging != null && metaHogging < 0
+      ? metaHogging
+      : 0;
+
+    const governingMomentType =
+      Math.abs(maxSaggingMoment) >= Math.abs(maxHoggingMoment)
+        ? "sagging"
+        : "hogging";
+
+    const governingMoment = governingMomentType === "sagging"
+      ? maxSaggingMoment
+      : maxHoggingMoment;
+
+    return {
+      hasResult: true,
+      maxSaggingMoment,
+      maxHoggingMoment,
+      governingMomentType,
+      governingMoment
+    };
   }
 
   const values = collectMomentValues(bendingResult);
@@ -805,7 +864,6 @@ function getDesignMoments(bendingResult) {
     governingMoment
   };
 }
-
 
 function getDirectMomentValues(bendingResult) {
   const maxSaggingMoment = firstFiniteNumber([
@@ -871,6 +929,11 @@ function collectMomentValues(value) {
 
 
 function walkMomentObject(value, values) {
+  if (Number.isFinite(Number(value))) {
+    values.push(Number(value));
+    return;
+  }
+
   if (Array.isArray(value)) {
     value.forEach((item) => walkMomentObject(item, values));
     return;
