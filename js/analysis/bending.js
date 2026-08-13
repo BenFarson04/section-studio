@@ -93,10 +93,18 @@ export function restoreBendingFromSession() {
 function momentAt(x, reactionResult) {
   let M = 0;
 
-  const isCantilever = reactionResult.type === "cantilever";
-
   if (isCantilever) {
-    // Sum moments from loads to the right of x
+    /*
+     * Cantilever:
+     * Sum the moments from loads to the right of the cut.
+     *
+     *  With the current sign convention used elsewhere:
+     *   - downward loads are negative
+     *   - hogging moments should therefore remain negative
+     *
+     * Do not flip the sign here, otherwise a true hogging
+     * cantilever moment appears as positive sagging.
+     */
     pointLoads.forEach(pl => {
       if (pl.location > x) {
         M += pl.load * (pl.location - x);
@@ -128,8 +136,6 @@ function momentAt(x, reactionResult) {
       M += rectLoad * (rectCentroid - x);
       M += triLoad * (triCentroid - x);
     });
-
-    M = -M;
 
   } else {
     // Sum moments from reactions and loads to the left of x
