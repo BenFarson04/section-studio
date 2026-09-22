@@ -1,37 +1,52 @@
 /* ╔══════════════════════════════════════════════════════════╗
  *  shear.js
  *
- *  Computes the shear force diagram (SFD) by sampling shear
- *  values along the beam. Handles reactions, point loads,
- *  and trapezoidal UDLs. Persists results to sessionStorage
- *  for use on the design page.
+ *  Computes the shear force diagram (SFD) by evaluating the
+ *  internal shear force at a series of cuts along the beam.
+ *
+ *  Sign convention:
+ *    - reactions are positive upward,
+ *    - downward external loads are negative,
+ *    - positive shear acts upward on the left face.
  *
  *  Dependencies:  state/store.js, analysis/reactions.js
  * ╚══════════════════════════════════════════════════════════╝ */
 
-/* ─── Imports ────────────────────────────────────────────── */
-
 import {
-  supports, udls, pointLoads, getBeamLength,
-  saveShearToSession, loadShearFromSession
+  supports,
+  udls,
+  pointLoads,
+  getBeamLength,
+  saveShearToSession,
+  loadShearFromSession,
 } from "../state/store.js";
 import { solveReactions } from "./reactions.js";
 
-
-/* ═══════════════════════════════════════════════════════════
- *  SHEAR ANALYSIS
- * ═══════════════════════════════════════════════════════════ */
-
 let lastResult = null;
 
-/* ─── Compute Shear Diagram ──────────────────────────────── */
+function udlForceToLeft(udl, x) {
+  const a = Number(udl.start);
+  const b = Number(udl.end);
+  const q1 = Number(udl.startLoad ?? 0);
+  const q2 = Number(udl.endLoad ?? 0);
+
+  if (x <= a) return 0;
+
+  const c = Math.min(x, b);
+  const L = c - a;
+  if (L <= 0) return 0;
+
+  const qAtC = q1 + (q2 - q1) * (L / (b - a || 1));
+  return 0.5 * (q1 + qAtC) * L;
+}
 
 export function computeShear(opts = {}) {
-  const samples = opts.samples || 200;
+  const samples = Math.max(200, Number(opts.samples) || 200);
   const result = solveReactions();
 
   if (!result.ok) {
     lastResult = { ok: false, message: result.message };
+    sessionStorage.removeItem("analysisShear");
     return lastResult;
   }
 
@@ -65,15 +80,12 @@ export function computeShear(opts = {}) {
     ok: true,
     x,
     V,
-    meta: { maxPos, maxNeg, absMax }
+    meta: { maxPos, maxNeg, absMax },
   };
 
   saveShearToSession(lastResult);
-
   return lastResult;
 }
-
-/* ─── Results Accessors ──────────────────────────────────── */
 
 export function getShearResults() {
   return lastResult;
@@ -85,43 +97,25 @@ export function restoreShearFromSession() {
   return lastResult;
 }
 
-
-/* ═══════════════════════════════════════════════════════════
- *  SHEAR FORCE CALCULATION
- * ═══════════════════════════════════════════════════════════ */
-
 function shearAt(x, reactionResult) {
   let V = 0;
 
-  // Reactions to the left (upward positive)
-  reactionResult.reactions.forEach(r => {
-    if (r.x < x && r.Rv !== undefined) {
+  reactionResult.reactions.forEach((r) => {
+    if (r.x <= x && r.Rv !== undefined) {
       V += r.Rv;
     }
   });
 
-  // Point loads to the left (downward negative)
-  pointLoads.forEach(pl => {
-    if (pl.location < x) {
+  pointLoads.forEach((pl) => {
+    if (pl.location <= x) {
       V -= pl.load;
     }
   });
 
-  // UDL contribution
-  udls.forEach(udl => {
-    const a = udl.start;
-    const b = udl.end;
-    const w1 = udl.startLoad;
-    const w2 = udl.endLoad;
-
-    if (x <= a) return;
-
-    const xEval = Math.min(x, b);
-    const len = xEval - a;
-    const wAtX = w1 + (w2 - w1) * len / (b - a);
-    const avgLoad = (w1 + wAtX) / 2;
-
-    V -= avgLoad * len;
+  udls.forEach((udl) => {
+    if (x > udl.start) {
+      V -= udlForceToLeft(udl, x);
+    }
   });
 
   return V;

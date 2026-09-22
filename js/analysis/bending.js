@@ -1,37 +1,127 @@
 /* ╔══════════════════════════════════════════════════════════╗
  *  bending.js
  *
- *  Computes the bending moment diagram (BMD) by sampling
- *  moment values along the beam. Handles both simply
- *  supported and cantilever configurations. Persists results
- *  to sessionStorage for use on the design page.
+ *  Computes the bending moment diagram (BMD) by evaluating
+ *  the internal moment at cuts along the beam.
+ *
+ *  Sign convention:
+ *    - downward loads are negative,
+ *    - upward reactions are positive,
+ *    - positive moment is sagging (concave up).
  *
  *  Dependencies:  state/store.js, analysis/reactions.js
  * ╚══════════════════════════════════════════════════════════╝ */
 
-/* ─── Imports ────────────────────────────────────────────── */
-
 import {
-  supports, udls, pointLoads, getBeamLength,
-  saveBendingToSession, loadBendingFromSession
+  supports,
+  udls,
+  pointLoads,
+  getBeamLength,
+  saveBendingToSession,
+  loadBendingFromSession,
 } from "../state/store.js";
 import { solveReactions } from "./reactions.js";
 
-
-/* ═══════════════════════════════════════════════════════════
- *  BENDING ANALYSIS
- * ═══════════════════════════════════════════════════════════ */
-
 let lastResult = null;
 
-/* ─── Compute Bending Diagram ────────────────────────────── */
+function udlForceToLeft(udl, x) {
+  const a = Number(udl.start);
+  const b = Number(udl.end);
+  const q1 = Number(udl.startLoad ?? 0);
+  const q2 = Number(udl.endLoad ?? 0);
+
+  if (x <= a) return 0;
+
+  const c = Math.min(x, b);
+  const L = c - a;
+  if (L <= 0) return 0;
+
+  const qAtC = q1 + (q2 - q1) * (L / (b - a || 1));
+  return 0.5 * (q1 + qAtC) * L;
+}
+
+function udlMomentToLeft(udl, x) {
+  const a = Number(udl.start);
+  const b = Number(udl.end);
+  const q1 = Number(udl.startLoad ?? 0);
+  const q2 = Number(udl.endLoad ?? 0);
+
+  if (x <= a) return 0;
+
+  const c = Math.min(x, b);
+  const L = c - a;
+  if (L <= 0) return 0;
+
+  const qAtC = q1 + (q2 - q1) * (L / (b - a || 1));
+  const totalLoad = 0.5 * (q1 + qAtC) * L;
+
+  if (Math.abs(totalLoad) < 1e-12) return 0;
+
+  const centroidFromStart = L * (q1 + 2 * qAtC) / (3 * (q1 + qAtC || 1));
+  const centroidX = a + centroidFromStart;
+  return totalLoad * (x - centroidX);
+}
+
+function shearAt(x, reactionResult) {
+  let V = 0;
+
+  reactionResult.reactions.forEach((r) => {
+    if (r.x <= x && r.Rv !== undefined) {
+      V += r.Rv;
+    }
+  });
+
+  pointLoads.forEach((pl) => {
+    if (pl.location <= x) {
+      V -= pl.load;
+    }
+  });
+
+  udls.forEach((udl) => {
+    if (x > udl.start) {
+      V -= udlForceToLeft(udl, x);
+    }
+  });
+
+  return V;
+}
+
+function momentAt(x, reactionResult) {
+  if (!reactionResult || !reactionResult.ok) return NaN;
+
+  let M = 0;
+
+  reactionResult.reactions.forEach((r) => {
+    if (r.x <= x && r.Rv !== undefined) {
+      M += r.Rv * (x - r.x);
+    }
+    if (r.M !== undefined && r.x <= x) {
+      M += r.M;
+    }
+  });
+
+  pointLoads.forEach((pl) => {
+    if (pl.location <= x) {
+      M -= pl.load * (x - pl.location);
+    }
+  });
+
+  udls.forEach((udl) => {
+    if (x >= udl.start) {
+      M -= udlMomentToLeft(udl, x);
+    }
+  });
+
+  return M;
+}
 
 export function computeBending(opts = {}) {
-  const samples = opts.samples || 200;
+  const samples = Math.max(200, Number(opts.samples) || 200);
   const result = solveReactions();
 
   if (!result.ok) {
     lastResult = { ok: false, message: result.message };
+    sessionStorage.removeItem("analysisBending");
     return lastResult;
   }
 
@@ -45,7 +135,7 @@ export function computeBending(opts = {}) {
   let maxNeg = { value: Infinity, x: 0 };
   let absMax = 0;
 
-  for (let i = 0; i <= samples; i++) {
+  for (let i = 0; i <= samples; i += 1) {
     const xi = i * dx;
     const Mi = momentAt(xi, result);
 
@@ -65,15 +155,12 @@ export function computeBending(opts = {}) {
     ok: true,
     x,
     M,
-    meta: { maxPos, maxNeg, absMax }
+    meta: { maxPos, maxNeg, absMax },
   };
 
   saveBendingToSession(lastResult);
-
   return lastResult;
 }
-
-/* ─── Results Accessors ──────────────────────────────────── */
 
 export function getBendingResults() {
   return lastResult;
@@ -85,95 +172,5 @@ export function restoreBendingFromSession() {
   return lastResult;
 }
 
+export { momentAt };
 
-/* ═══════════════════════════════════════════════════════════
- *  MOMENT CALCULATION
- * ═══════════════════════════════════════════════════════════ */
-
-function momentAt(x, reactionResult) {
-  let M = 0;
-
-  const isCantilever = reactionResult.type === "cantilever";
-
-  if (isCantilever) {
-    /*
-     * Cantilever:
-     * Sum the moments from loads to the right of the cut.
-     *
-     *  With the current sign convention used elsewhere:
-     *   - downward loads are negative
-     *   - hogging moments should therefore remain negative
-     *
-     * Do not flip the sign here, otherwise a true hogging
-     * cantilever moment appears as positive sagging.
-     */
-    pointLoads.forEach(pl => {
-      if (pl.location > x) {
-        M += pl.load * (pl.location - x);
-      }
-    });
-
-    udls.forEach(udl => {
-      const a = udl.start;
-      const b = udl.end;
-      const w1 = udl.startLoad;
-      const w2 = udl.endLoad;
-
-      if (x >= b) return;
-
-      const xStart = Math.max(x, a);
-      const len = b - xStart;
-
-      if (len <= 0) return;
-
-      const wStart = w1 + (w2 - w1) * (xStart - a) / (b - a);
-      const wEnd = w2;
-
-      const rectLoad = wStart * len;
-      const triLoad = 0.5 * (wEnd - wStart) * len;
-
-      const rectCentroid = xStart + len / 2;
-      const triCentroid = xStart + (2 * len / 3);
-
-      M += rectLoad * (rectCentroid - x);
-      M += triLoad * (triCentroid - x);
-    });
-
-  } else {
-    // Sum moments from reactions and loads to the left of x
-    reactionResult.reactions.forEach(r => {
-      if (r.x < x && r.Rv !== undefined) {
-        M += r.Rv * (x - r.x);
-      }
-    });
-
-    pointLoads.forEach(pl => {
-      if (pl.location < x) {
-        M -= pl.load * (x - pl.location);
-      }
-    });
-
-    udls.forEach(udl => {
-      const a = udl.start;
-      const b = udl.end;
-      const w1 = udl.startLoad;
-      const w2 = udl.endLoad;
-
-      if (x <= a) return;
-
-      const xEval = Math.min(x, b);
-      const len = xEval - a;
-
-      const rectLoad = w1 * len;
-      const triLoad = 0.5 * (w2 - w1) * len / (b - a) * len;
-
-      const rectCentroid = a + len / 2;
-      const triCentroid = a + (2 * len / 3);
-
-      M -= rectLoad * (x - rectCentroid);
-      M -= triLoad * (x - triCentroid);
-    });
-  }
-
-  return M;
-}

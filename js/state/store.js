@@ -20,8 +20,15 @@ export const lengthInput = document.getElementById("length");
 let _cachedLength = 5; // fallback for pages without #length
 
 export function getBeamLength() {
-  if (lengthInput) return Number(lengthInput.value);
-  return _cachedLength;
+  const explicitLength = lengthInput ? Number(lengthInput.value) : _cachedLength;
+  const maxLoadedLocation = Math.max(
+    0,
+    ...supports.map((s) => Number(s.location) || 0),
+    ...pointLoads.map((p) => Number(p.location) || 0),
+    ...udls.flatMap((u) => [Number(u.start) || 0, Number(u.end) || 0]),
+  );
+
+  return Math.max(explicitLength, maxLoadedLocation);
 }
 
 export function getScale() {

@@ -2,67 +2,55 @@
  *  reactions.js
  *
  *  Solves support reactions for statically determinate beams
- *  using equilibrium equations. Supports two configurations:
+ *  using first-principles equilibrium. The sign convention is:
  *
- *    • Cantilever  (single fixed support)
- *    • Simply supported  (two supports: pinned + roller)
+ *    • downward loads are negative,
+ *    • upward reactions are positive,
+ *    • clockwise moments are negative.
+ *
+ *  Supported configurations:
+ *    • single fixed support (cantilever),
+ *    • two simple supports (pin/roller),
  *
  *  Dependencies:  state/store.js,
  *                 analysis/staticallyDeterminate.js
  * ╚══════════════════════════════════════════════════════════╝ */
 
-/* ─── Imports ────────────────────────────────────────────── */
-
 import { supports, udls, pointLoads } from "../state/store.js";
 import { checkBeamStability } from "./staticallyDeterminate.js";
 
-
-/* ═══════════════════════════════════════════════════════════
- *  UDL RESULTANT HELPER
- * ═══════════════════════════════════════════════════════════ */
-
-function udlsAverage(udl) {
-  const a = udl.start;
-  const b = udl.end;
-  const w1 = udl.startLoad;
-  const w2 = udl.endLoad;
-
+export function udlsAverage(udl) {
+  const a = Number(udl.start);
+  const b = Number(udl.end);
+  const q1 = Number(udl.startLoad ?? 0);
+  const q2 = Number(udl.endLoad ?? 0);
   const L = b - a;
 
-  // Total load (kN)
-  const W = 0.5 * (w1 + w2) * L;
+  if (!(L > 0)) {
+    return { magnitude: 0, location: a };
+  }
 
-  // Centroid location
+  const W = 0.5 * (q1 + q2) * L;
+
   let x;
-  if (Math.abs(w1 + w2) < 1e-12) {
+  if (Math.abs(q1 + q2) < 1e-12) {
     x = a + L / 2;
   } else {
-    const xFromStart = L * (w1 + 2 * w2) / (3 * (w1 + w2));
+    const xFromStart = L * (q1 + 2 * q2) / (3 * (q1 + q2));
     x = a + xFromStart;
   }
 
-  return {
-    magnitude: W,
-    location: x
-  };
+  return { magnitude: W, location: x };
 }
 
-
-/* ═══════════════════════════════════════════════════════════
- *  REACTION SOLVER
- * ═══════════════════════════════════════════════════════════ */
-
 export function solveReactions() {
-
-  /* ─── Stability Check ──────────────────────────────────── */
-
   const stability = checkBeamStability();
 
   if (!stability.ok) {
     return {
       ok: false,
       message: stability.warning || stability.message,
-      stability
+      stability,
     };
   }
 
@@ -70,28 +58,26 @@ export function solveReactions() {
     return {
       ok: false,
       message: `Statically indeterminate (degree ${stability.dsi}). Solver is statics-only.`,
-      stability
+      stability,
     };
   }
 
   const s = [...supports].sort((a, b) => a.location - b.location);
 
-  /* ─── Cantilever (single fixed support) ────────────────── */
-
   if (s.length === 1 && s[0].type === "Fixed") {
     const xF = s[0].location;
 
-    let totalLoad = 0;
+    let totalVertical = 0;
     let momentAboutFixed = 0;
 
-    pointLoads.forEach(pl => {
-      totalLoad += pl.load;
+    pointLoads.forEach((pl) => {
+      totalVertical += pl.load;
       momentAboutFixed += pl.load * (pl.location - xF);
     });
 
-    udls.forEach(udl => {
+    udls.forEach((udl) => {
       const { magnitude, location } = udlsAverage(udl);
-      totalLoad += magnitude;
+      totalVertical += magnitude;
       momentAboutFixed += magnitude * (location - xF);
     });
 
@@ -102,15 +88,13 @@ export function solveReactions() {
         {
           supportIndex: 0,
           x: xF,
-          Rv: totalLoad,
-          M: momentAboutFixed
-        }
+          Rv: totalVertical,
+          M: -momentAboutFixed,
+        },
       ],
-      stability
+      stability,
     };
   }
-
-  /* ─── Simply Supported (two supports) ──────────────────── */
 
   if (s.length === 2) {
     const xA = s[0].location;
@@ -120,42 +104,40 @@ export function solveReactions() {
     if (span <= 0) {
       return {
         ok: false,
-        message: "Supports must be at different locations."
+        message: "Supports must be at different locations.",
       };
     }
 
-    let totalLoad = 0;
+    let totalVertical = 0;
     let momentAboutA = 0;
 
-    pointLoads.forEach(pl => {
-      totalLoad += pl.load;
+    pointLoads.forEach((pl) => {
+      totalVertical += pl.load;
       momentAboutA += pl.load * (pl.location - xA);
     });
 
-    udls.forEach(udl => {
+    udls.forEach((udl) => {
       const { magnitude, location } = udlsAverage(udl);
-      totalLoad += magnitude;
+      totalVertical += magnitude;
       momentAboutA += magnitude * (location - xA);
     });
 
     const RB = momentAboutA / span;
-    const RA = totalLoad - RB;
+    const RA = totalVertical - RB;
 
     return {
       ok: true,
       type: "simply-supported",
       reactions: [
         { supportIndex: 0, x: xA, Rv: RA },
-        { supportIndex: 1, x: xB, Rv: RB }
+        { supportIndex: 1, x: xB, Rv: RB },
       ],
-      stability
+      stability,
     };
   }
 
-  /* ─── Unsupported Configuration ────────────────────────── */
-
   return {
     ok: false,
-    message: "Unsupported support configuration for statics-only solver."
+    message: "Unsupported support configuration for statics-only solver.",
   };
 }
