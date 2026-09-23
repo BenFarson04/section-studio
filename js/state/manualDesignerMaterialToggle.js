@@ -230,6 +230,7 @@ export function getConcreteSectionInput() {
     cover: Number(document.getElementById("concreteCover")?.value ?? 0),
     linkDiameter: Number(document.getElementById("linkDiameter")?.value ?? 0),
     linkSpacing: Number(document.getElementById("linkSpacing")?.value ?? 0),
+    linkLegs: Number(document.getElementById("linkLegs")?.value ?? 2),
     topBars: getBarLayerInputs("topBarsTbody"),
     bottomBars: getBarLayerInputs("bottomBarsTbody")
   };

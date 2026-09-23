@@ -192,6 +192,7 @@ function bindConcretePreviewInputs() {
     "concreteCover",
     "linkDiameter",
     "linkSpacing",
+    "linkLegs",
   ].forEach((id) => {
     const el = document.getElementById(id);
 

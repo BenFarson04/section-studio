@@ -33,11 +33,14 @@
 import { getConcreteSectionInput }
   from "../state/manualDesignerMaterialToggle.js";
 
-import { loadBendingFromSession }
+import { loadBendingFromSession, loadShearFromSession }
   from "../state/store.js";
 
 import { calculateConcreteEffectiveDepths }
   from "./concreteEffectiveDepth.js";
+
+import { calculateConcreteShearResistance }
+  from "./concreteShearCheck.js";
 
 
 
@@ -113,6 +116,25 @@ export function calculateConcreteSection(
   };
 
   const moments = getDesignMoments(bendingResult);
+  const shearResult = loadShearFromSession();
+  const shearForce = getDesignShearForce(shearResult);
+  const shearDepth = Math.min(
+    Number(effectiveDepths.sagging?.effectiveDepth ?? Infinity),
+    Number(effectiveDepths.hogging?.effectiveDepth ?? Infinity)
+  );
+
+  const shearCheck = calculateConcreteShearResistance({
+    ...section,
+    effectiveDepth: Number.isFinite(shearDepth) ? shearDepth : 0,
+    VEd: shearForce,
+    longitudinalSteelArea: provided.top.totalArea + provided.bottom.totalArea,
+    topBars: section.topBars,
+    bottomBars: section.bottomBars,
+  }, {
+    fck: material.fck,
+    fyk: material.fyk,
+    cotTheta: options.cotTheta ?? 2.0,
+  });
 
   /*
    * Sagging:
@@ -182,6 +204,8 @@ const hogging = checkConcreteBending({
 
     providedSteel: provided,
 
+    shearCheck,
+
     checks: {
       sagging,
       hogging
@@ -219,6 +243,7 @@ export function renderConcreteSectionSummary(el, result) {
 
   const saggingRow = renderConcreteBendingRow(result.checks?.sagging);
   const hoggingRow = renderConcreteBendingRow(result.checks?.hogging);
+  const shearRow = renderConcreteShearRow(result.shearCheck);
 
   const governing = result.governing;
 
@@ -256,6 +281,7 @@ export function renderConcreteSectionSummary(el, result) {
           <tbody>
             ${saggingRow}
             ${hoggingRow}
+            ${shearRow}
           </tbody>
         </table>
       </div>
@@ -271,6 +297,45 @@ export function renderConcreteSectionSummary(el, result) {
   `;
 }
 
+
+function renderConcreteShearRow(check) {
+  if (!check?.isValid) {
+    return `
+      <tr>
+        <td>Shear</td>
+        <td colspan="3" class="util-warning">
+          ⚠ ${check?.warning || "Shear check not available."}
+        </td>
+      </tr>
+    `;
+  }
+
+  const ok = check.pass;
+  const util = Number.isFinite(check.utilisation) ? check.utilisation : null;
+
+  return `
+    <tr>
+      <td>Shear</td>
+      <td>
+        V<sub>Ed</sub> = ${formatNumber(check.VEd, 2)} kN
+        <br>
+        <span class="muted small">
+          Links: ${check.linkDiameter > 0 ? `H${check.linkDiameter} @ ${check.linkSpacing} mm` : "—"}${check.linkLegs ? ` (${check.linkLegs}-leg)` : ""}
+        </span>
+      </td>
+      <td>
+        V<sub>Rd,max</sub> = ${formatNumber(check.VRdMax, 2)} kN
+        <br>
+        V<sub>Rd,s</sub> = ${formatNumber(check.VRdS, 2)} kN
+        <br>
+        V<sub>Rd,c</sub> = ${formatNumber(check.VRdC, 2)} kN
+      </td>
+      <td class="${ok ? "util-pass" : "util-fail"}">
+        ${util != null ? formatNumber(util, 3) : "—"}&ensp;${ok ? CONCRETE_TICK : CONCRETE_CROSS}
+      </td>
+    </tr>
+  `;
+}
 
 function renderConcreteBendingRow(check) {
   if (!check?.isValid) {
@@ -1084,6 +1149,10 @@ function getSectionCalcNotes(sagging, hogging, moments) {
       "No stored bending result was found. Sagging and hogging checks could not use analysis moments."
     );
   }
+
+  notes.push(
+    "The shear check uses the maximum absolute SFD value from the saved beam analysis as VEd and evaluates EC2 concrete and link resistance checks for the rectangular concrete section."
+  );
 
   if (sagging?.k?.compressionRequired) {
     notes.push(

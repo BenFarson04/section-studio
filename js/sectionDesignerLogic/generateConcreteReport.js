@@ -883,6 +883,7 @@ export async function generateConcreteReport() {
       effectiveDepths,
       providedSteel,
       checks,
+      shearCheck,
       governing,
       notes
     } = result;
@@ -1069,6 +1070,36 @@ export async function generateConcreteReport() {
     /* ·· Hogging Bending Check ····························· */
 
     drawBendingCheck(c, checks.hogging);
+
+
+    /* ·· Shear Resistance Check ··························· */
+
+    heading(c, "5.  Shear Resistance Check");
+
+    if (shearCheck?.isValid) {
+      richLn(c, `V{sub:Ed} = ${valueOrDash(shearCheck.VEd, 2)} kN`, { x: PG.indent });
+      richLn(c, `Shear links: ${shearCheck.linkDiameter > 0 ? `${shearCheck.linkLegs}-leg Ø${shearCheck.linkDiameter} @ ${shearCheck.linkSpacing} mm c/c` : "not specified"}`, { x: PG.indent });
+      richLn(c, `A{sub:sw} = ${valueOrDash(shearCheck.linkArea, 1)} mm²`, { x: PG.indent });
+      richLn(c, `f{sub:ywd} = ${valueOrDash(shearCheck.reinforcementDesignStrength, 1)} MPa`, { x: PG.indent });
+      richLn(c, `cotθ = ${valueOrDash(shearCheck.cotTheta, 2)}`, { x: PG.indent });
+      richLn(c, `V{sub:Rd,c} = ${valueOrDash(shearCheck.VRdC, 2)} kN`, { x: PG.indent });
+      richLn(c, `V{sub:Rd,s} = ${valueOrDash(shearCheck.VRdS, 2)} kN`, { x: PG.indent });
+      richLn(c, `V{sub:Rd,max} = ${valueOrDash(shearCheck.VRdMax, 2)} kN`, { x: PG.indent });
+      richLn(c, `Governing V{sub:Rd} = ${valueOrDash(shearCheck.governingResistance, 2)} kN`, { x: PG.indent });
+      richLn(c, `Shear utilisation = ${ratioOrDash(shearCheck.utilisation)}`, { x: PG.indent });
+      ln(c, `Shear check: ${passText(shearCheck.pass)}`, {
+        x: PG.indent,
+        font: bold,
+        color: passColour(shearCheck.pass)
+      });
+    } else {
+      ln(c, shearCheck?.warning || "No valid shear check could be completed.", {
+        x: PG.indent,
+        color: COL.red
+      });
+    }
+
+    c.skip(PG.secGap);
 
 
     /* ·· Governing Summary ································· */
