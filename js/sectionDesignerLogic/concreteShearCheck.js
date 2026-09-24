@@ -169,6 +169,7 @@ function calculateConcreteShearResistance(input = {}, options = {}) {
   const linkArea = calculateLinkArea(section.linkDiameter, section.linkLegs);
   const linkSpacing = section.linkSpacing;
   const hasLinks = section.linkDiameter > 0 && linkSpacing > 0 && linkArea > 0;
+  const nu1 = Math.min(0.6, 0.6 * (1 - fck / 250));
 
   if (!hasLinks) {
     warnings.push("No valid shear links were supplied. The concrete resistance only check is reported.");
@@ -178,21 +179,26 @@ function calculateConcreteShearResistance(input = {}, options = {}) {
     warnings.push("Link spacing is zero or missing.");
   }
 
+  let z = 0;
+  let aswPerSpacing = 0;
   let vRdSN = 0;
   let vRdMaxN = 0;
   let governingResistanceN = 0;
 
   if (hasLinks) {
-    const z = 0.9 * d;
+    z = 0.9 * d;
     const s = linkSpacing;
-    const aswPerSp = linkArea / s;
+    aswPerSpacing = linkArea / s;
     const tanTheta = 1 / cotTheta;
-    const nu1 = Math.min(0.6, 0.6 * (1 - fck / 250));
-    const vRdSValueN = aswPerSp * z * fywd * cotTheta;
+    const vRdSValueN = aswPerSpacing * z * fywd * cotTheta;
     vRdSN = vRdSValueN;
 
     const vRdMaxValueN = (bw * z * nu1 * material.fcd) / (cotTheta + tanTheta);
     vRdMaxN = vRdMaxValueN;
+
+    // EC2: with provided shear reinforcement, the design resistance is usually the
+    // lower of V_Rd,s and V_Rd,max. V_Rd,c remains a concrete-only resistance and is
+    // not the governing design value once links are present.
     governingResistanceN = Math.min(vRdMaxN, vRdSN);
   } else {
     governingResistanceN = vRdCN;
@@ -247,14 +253,16 @@ function calculateConcreteShearResistance(input = {}, options = {}) {
       rhoL,
       vMin,
       fRdc,
-      aswPerSpacing: hasLinks ? linkArea / linkSpacing : 0,
-      z: hasLinks ? 0.9 * d : 0,
-      nu1: hasLinks ? Math.min(0.6, 0.6 * (1 - fck / 250)) : 0,
+      crdC: fRdc,
+      aswPerSpacing,
+      z,
+      nu1,
       theta: Math.atan(1 / cotTheta) * 180 / Math.PI,
       vRdC: vRdCN,
       vRdS: vRdSN,
       vRdMax: vRdMaxN,
       designShearN,
+      governingResistanceN,
     }
   };
 }

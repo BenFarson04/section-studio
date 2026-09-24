@@ -185,6 +185,8 @@ function testConcreteShearLinkResistance() {
   assertAlmostEqual(result.linkArea, 2 * Math.PI * (10 ** 2) / 4, 1e-6, 'Asw');
   assert.ok(result.VRdS > 0, 'VRdS positive');
   assert.ok(result.governingResistance > 0, 'governing resistance positive');
+  assertAlmostEqual(result.governingResistance, Math.min(result.VRdS, result.VRdMax), 1e-6, 'governing equals lesser of VRdS and VRdMax');
+  assert.ok(result.VRdC < result.governingResistance, 'VRdC is not the governing design limit when links are present');
   assert.ok(result.pass, 'pass for adequate shear');
   assertAlmostEqual(result.utilisation, result.VEd / result.governingResistance, 1e-6, 'utilization');
 }
@@ -220,6 +222,43 @@ function testConcreteDesignShearEnvelope() {
 
   assertAlmostEqual(getDesignShearForce(shearResult), 48, 1e-6, 'design shear uses absolute envelope');
   assertAlmostEqual(getDesignShearForce(null), 0, 1e-6, 'missing shear result defaults to zero');
+}
+
+function testConcreteShearGoverningResistanceLogic() {
+  const withLinks = calculateConcreteShearResistance({
+    grade: 'C30/37',
+    width: 300,
+    depth: 500,
+    cover: 35,
+    linkDiameter: 8,
+    linkSpacing: 200,
+    linkLegs: 2,
+    topBars: [{ numberOfBars: 2, barDiameter: 16 }],
+    bottomBars: [{ numberOfBars: 3, barDiameter: 20 }],
+    VEd: 50,
+    cotTheta: 2,
+    longitudinalSteelArea: 3 * Math.PI * (20 ** 2) / 4,
+  });
+
+  assert.ok(withLinks.VRdS > 0, 'link-based shear resistance positive');
+  assert.ok(withLinks.VRdMax > 0, 'strut shear resistance positive');
+  assertAlmostEqual(withLinks.governingResistance, Math.min(withLinks.VRdS, withLinks.VRdMax), 1e-6, 'link case uses min of VRdS and VRdMax');
+
+  const withoutLinks = calculateConcreteShearResistance({
+    grade: 'C30/37',
+    width: 300,
+    depth: 500,
+    cover: 35,
+    linkDiameter: 0,
+    linkSpacing: 0,
+    linkLegs: 0,
+    topBars: [{ numberOfBars: 2, barDiameter: 16 }],
+    bottomBars: [{ numberOfBars: 3, barDiameter: 20 }],
+    VEd: 50,
+    longitudinalSteelArea: 3 * Math.PI * (20 ** 2) / 4,
+  });
+
+  assertAlmostEqual(withoutLinks.governingResistance, withoutLinks.VRdC, 1e-6, 'no-link case governed by concrete-only VRdC');
 }
 
 function testConcreteSectionCalculationUsesStoredShear() {
@@ -578,6 +617,7 @@ try {
   testConcreteShearLinkResistance();
   testConcreteShearLinkDeficiency();
   testConcreteDesignShearEnvelope();
+  testConcreteShearGoverningResistanceLogic();
   testConcreteSectionCalculationUsesStoredShear();
   testConcreteReportUnicodeSafety();
   testConcreteShearReferenceCases();
