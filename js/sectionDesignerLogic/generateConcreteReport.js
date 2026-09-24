@@ -1269,17 +1269,3 @@ export async function generateConcreteReport() {
  *  INITIALISATION
  * ═══════════════════════════════════════════════════════════ */
 
-const _btn = document.getElementById("generateReportBtn");
-
-if (_btn) {
-  _btn.addEventListener("click", () => {
-    const material =
-      document.getElementById("designMaterial")?.value ?? "steel";
-
-    if (material !== "concrete") {
-    return;
-    }
-
-    generateConcreteReport();
-  });
-}

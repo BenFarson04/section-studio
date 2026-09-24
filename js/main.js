@@ -56,6 +56,7 @@ import "./sectionDesignerLogic/steelSectionsSelection.js";
 import "./sectionDesignerLogic/steelGradesSelection.js";
 import "./sectionDesignerLogic/generateReport.js";
 import "./sectionDesignerLogic/generateConcreteReport.js";
+import { bindReportGenerationButton } from "./sectionDesignerLogic/reportGeneratorRouter.js";
 
 import { runUbUcDesignCheck }    from "./sectionDesignerLogic/ubUcSectionCalc.js";
 import { runPfcDesignCheck }     from "./sectionDesignerLogic/pfcSectionCalc.js";
@@ -105,6 +106,8 @@ function initApp() {
   if (isManualDesignerPage) {
     initManualDesignerPage();
   }
+
+  bindReportGenerationButton();
 
   restoreResultsFromSession();
 }
