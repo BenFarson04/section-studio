@@ -27,6 +27,9 @@ import { getConcreteSectionInput }
 import { runConcreteSectionCalc }
   from "./concreteSectionCalc.js";
 
+import { sanitizePdfText }
+  from "./reportText.js";
+
 
 const { PDFDocument, rgb, StandardFonts } = PDFLib;
 
@@ -321,7 +324,7 @@ function ln(c, text, opts = {}) {
 
   c.ensure(lh);
 
-  c.page.drawText(String(text), {
+  c.page.drawText(sanitizePdfText(String(text)), {
     x,
     y: c.y,
     size,
@@ -341,7 +344,7 @@ function fillTitleBlock(page, font, meta) {
 
     if (!val) continue;
 
-    page.drawText(String(val), {
+    page.drawText(sanitizePdfText(String(val)), {
       x: pos.x,
       y: pos.y,
       size: pos.size,
@@ -361,17 +364,18 @@ const SUP_RISE = 4;
 
 
 function parseRich(str) {
+  const safe = sanitizePdfText(str);
   const tokens = [];
   const re = /\{(sub|sup|sym):([^}]*)\}/g;
 
   let last = 0;
   let m;
 
-  while ((m = re.exec(str)) !== null) {
+  while ((m = re.exec(safe)) !== null) {
     if (m.index > last) {
       tokens.push({
         type: "text",
-        val: str.slice(last, m.index)
+        val: safe.slice(last, m.index)
       });
     }
 
@@ -383,10 +387,10 @@ function parseRich(str) {
     last = re.lastIndex;
   }
 
-  if (last < str.length) {
+  if (last < safe.length) {
     tokens.push({
       type: "text",
-      val: str.slice(last)
+      val: safe.slice(last)
     });
   }
 
@@ -1079,9 +1083,9 @@ export async function generateConcreteReport() {
     if (shearCheck?.isValid) {
       richLn(c, `V{sub:Ed} = ${valueOrDash(shearCheck.VEd, 2)} kN`, { x: PG.indent });
       richLn(c, `Shear links: ${shearCheck.linkDiameter > 0 ? `${shearCheck.linkLegs}-leg Ø${shearCheck.linkDiameter} @ ${shearCheck.linkSpacing} mm c/c` : "not specified"}`, { x: PG.indent });
-      richLn(c, `A{sub:sw} = ${valueOrDash(shearCheck.linkArea, 1)} mm²`, { x: PG.indent });
+      richLn(c, `A{sub:sw} = ${valueOrDash(shearCheck.linkArea, 1)} mm{sup:2}`, { x: PG.indent });
       richLn(c, `f{sub:ywd} = ${valueOrDash(shearCheck.reinforcementDesignStrength, 1)} MPa`, { x: PG.indent });
-      richLn(c, `cotθ = ${valueOrDash(shearCheck.cotTheta, 2)}`, { x: PG.indent });
+      richLn(c, `cot{sym:θ} = ${valueOrDash(shearCheck.cotTheta, 2)}`, { x: PG.indent });
       richLn(c, `V{sub:Rd,c} = ${valueOrDash(shearCheck.VRdC, 2)} kN`, { x: PG.indent });
       richLn(c, `V{sub:Rd,s} = ${valueOrDash(shearCheck.VRdS, 2)} kN`, { x: PG.indent });
       richLn(c, `V{sub:Rd,max} = ${valueOrDash(shearCheck.VRdMax, 2)} kN`, { x: PG.indent });

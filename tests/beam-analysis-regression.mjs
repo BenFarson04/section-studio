@@ -21,6 +21,7 @@ const { computeShear } = await import('../js/analysis/shear.js');
 const { computeBending, momentAt } = await import('../js/analysis/bending.js');
 const { calculateConcreteShearResistance } = await import('../js/sectionDesignerLogic/concreteShearCheck.js');
 const { getDesignShearForce, calculateConcreteSection } = await import('../js/sectionDesignerLogic/concreteSectionCalc.js');
+const { sanitizePdfText } = await import('../js/sectionDesignerLogic/reportText.js');
 
 function resetModel() {
   supports.length = 0;
@@ -249,6 +250,22 @@ function testConcreteSectionCalculationUsesStoredShear() {
   assert.equal(result.isValid, true, 'concrete section calculation valid with stored shear and bending');
   assertAlmostEqual(result.shearCheck.VEd, 52, 1e-6, 'shear check uses maximum absolute SFD value');
   assert.ok(Number.isFinite(result.shearCheck.utilisation), 'shear utilisation computed');
+}
+
+function testConcreteReportUnicodeSafety() {
+  const text = 'cotθ = 2.0, γc = 1.5, αcc = 0.85, A², √(1 - K), ρ ≤ 0.5, ρ ≥ 0.2';
+  const safe = sanitizePdfText(text);
+
+  assert.equal(safe.includes('cotθ'), false, 'theta removed from plain text');
+  assert.equal(safe.includes('γc'), false, 'gamma removed from plain text');
+  assert.equal(safe.includes('αcc'), false, 'alpha removed from plain text');
+  assert.ok(safe.includes('{sym:θ}'), 'theta token present');
+  assert.ok(safe.includes('{sym:γ}'), 'gamma token present');
+  assert.ok(safe.includes('{sym:α}'), 'alpha token present');
+  assert.ok(safe.includes('{sup:2}'), 'superscript token present');
+  assert.ok(safe.includes('{sym:√}'), 'sqrt token present');
+  assert.ok(safe.includes('<='), 'less-than-or-equal normalized');
+  assert.ok(safe.includes('>='), 'greater-than-or-equal normalized');
 }
 
 function referenceShearCase(input) {
@@ -562,6 +579,7 @@ try {
   testConcreteShearLinkDeficiency();
   testConcreteDesignShearEnvelope();
   testConcreteSectionCalculationUsesStoredShear();
+  testConcreteReportUnicodeSafety();
   testConcreteShearReferenceCases();
   console.log('beam-analysis-regression: all tests passed');
 } catch (error) {
