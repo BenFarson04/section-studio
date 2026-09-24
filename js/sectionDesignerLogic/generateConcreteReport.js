@@ -624,12 +624,12 @@ function drawReinforcementSummary(c, title, steel) {
 }
 
 
-function drawBendingCheck(c, check) {
+function drawBendingCheck(c, check, sectionNumber) {
   const title = check.momentType === "sagging"
     ? "Sagging bending check — bottom steel in tension"
     : "Hogging bending check — top steel in tension";
 
-  heading(c, title);
+  heading(c, `${sectionNumber}.  ${title}`);
 
   if (!check?.isValid) {
     ln(c, check?.checks?.flexuralSteel?.message || "Check could not be completed.", {
@@ -1070,17 +1070,17 @@ export async function generateConcreteReport() {
 
     /* ·· Sagging Bending Check ····························· */
 
-    drawBendingCheck(c, checks.sagging);
+    drawBendingCheck(c, checks.sagging, 5);
 
 
     /* ·· Hogging Bending Check ····························· */
 
-    drawBendingCheck(c, checks.hogging);
+    drawBendingCheck(c, checks.hogging, 6);
 
 
     /* ·· Shear Resistance Check ··························· */
 
-    heading(c, "5.  Shear Resistance Check");
+    heading(c, "7.  Shear Resistance Check");
 
     if (shearCheck?.isValid) {
       const shearInputs = shearCheck.intermediate || {};
@@ -1137,7 +1137,7 @@ export async function generateConcreteReport() {
 
     /* ·· Governing Summary ································· */
 
-    heading(c, "7.  Governing Summary");
+    heading(c, "8.  Governing Summary");
 
     if (governing?.isValid) {
       ln(
@@ -1178,7 +1178,7 @@ export async function generateConcreteReport() {
 
     /* ·· End Notes ········································· */
 
-    heading(c, "8.  Notes & Scope");
+    heading(c, "9.  Notes & Scope");
 
     ln(c, "This report covers a simplified ULS rectangular beam bending check.", {
       x: PG.indent,
