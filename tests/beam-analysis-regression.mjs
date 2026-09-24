@@ -20,6 +20,7 @@ const { solveReactions } = await import('../js/analysis/reactions.js');
 const { computeShear } = await import('../js/analysis/shear.js');
 const { computeBending, momentAt } = await import('../js/analysis/bending.js');
 const { calculateConcreteShearResistance } = await import('../js/sectionDesignerLogic/concreteShearCheck.js');
+const { getDesignShearForce, calculateConcreteSection } = await import('../js/sectionDesignerLogic/concreteSectionCalc.js');
 
 function resetModel() {
   supports.length = 0;
@@ -205,6 +206,49 @@ function testConcreteShearLinkDeficiency() {
 
   assert.equal(result.isValid, true, 'shear check valid for deficient case');
   assert.equal(result.pass, false, 'shear fails when demand exceeds resistance');
+}
+
+function testConcreteDesignShearEnvelope() {
+  const shearResult = {
+    ok: true,
+    meta: {
+      maxPos: { value: 35 },
+      maxNeg: { value: -48 },
+    },
+  };
+
+  assertAlmostEqual(getDesignShearForce(shearResult), 48, 1e-6, 'design shear uses absolute envelope');
+  assertAlmostEqual(getDesignShearForce(null), 0, 1e-6, 'missing shear result defaults to zero');
+}
+
+function testConcreteSectionCalculationUsesStoredShear() {
+  sessionStorage.setItem('analysisShear', JSON.stringify({
+    ok: true,
+    meta: { maxPos: { value: 48 }, maxNeg: { value: -52 }, absMax: 52 },
+  }));
+
+  sessionStorage.setItem('analysisBending', JSON.stringify({
+    ok: true,
+    meta: { maxPos: { value: 65 }, maxNeg: { value: -75 }, absMax: 75 },
+  }));
+
+  const result = calculateConcreteSection({
+    grade: 'C30/37',
+    width: 300,
+    depth: 500,
+    cover: 35,
+    linkDiameter: 8,
+    linkSpacing: 200,
+    topBars: [{ numberOfBars: 2, barDiameter: 16 }],
+    bottomBars: [{ numberOfBars: 2, barDiameter: 16 }],
+  }, {
+    ok: true,
+    meta: { maxPos: { value: 65 }, maxNeg: { value: -75 }, absMax: 75 },
+  });
+
+  assert.equal(result.isValid, true, 'concrete section calculation valid with stored shear and bending');
+  assertAlmostEqual(result.shearCheck.VEd, 52, 1e-6, 'shear check uses maximum absolute SFD value');
+  assert.ok(Number.isFinite(result.shearCheck.utilisation), 'shear utilisation computed');
 }
 
 function referenceShearCase(input) {
@@ -516,6 +560,8 @@ try {
   testLoadAtSupport();
   testConcreteShearLinkResistance();
   testConcreteShearLinkDeficiency();
+  testConcreteDesignShearEnvelope();
+  testConcreteSectionCalculationUsesStoredShear();
   testConcreteShearReferenceCases();
   console.log('beam-analysis-regression: all tests passed');
 } catch (error) {

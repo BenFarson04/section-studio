@@ -835,6 +835,25 @@ function getFctmFromFck(fck) {
   BENDING MOMENTS
 ═══════════════════════════════════════════════════════════ */
 
+export function getDesignShearForce(shearResult) {
+  if (!shearResult?.meta) {
+    return 0;
+  }
+
+  const maxPos = Number(shearResult.meta.maxPos?.value ?? 0);
+  const maxNeg = Number(shearResult.meta.maxNeg?.value ?? 0);
+  const absMax = Number(shearResult.meta.absMax ?? 0);
+
+  const candidates = [
+    Math.abs(maxPos),
+    Math.abs(maxNeg),
+    Math.abs(absMax)
+  ].filter((value) => Number.isFinite(value));
+
+  return candidates.length ? Math.max(...candidates) : 0;
+}
+
+
 function getDesignMoments(bendingResult) {
   if (!bendingResult) {
     return {
