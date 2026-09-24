@@ -27,11 +27,13 @@ import { getConcreteSectionInput }
 import { runConcreteSectionCalc }
   from "./concreteSectionCalc.js";
 
-import { sanitizePdfText }
-  from "./reportText.js";
+import {
+  loadPdfFonts,
+  sanitizePdfText
+} from "./reportText.js";
 
 
-const { PDFDocument, rgb, StandardFonts } = PDFLib;
+const { PDFDocument, rgb } = PDFLib;
 
 
 /* ═══════════════════════════════════════════════════════════
@@ -906,21 +908,21 @@ export async function generateConcreteReport() {
     const templateDoc = await PDFDocument.load(templateBytes);
     const extraPages = await pdfDoc.copyPages(templateDoc, Array(10).fill(0));
 
-    const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const bold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const mono    = await pdfDoc.embedFont(StandardFonts.Courier);
-    const symbol  = await pdfDoc.embedFont(StandardFonts.Symbol);
+    const fonts = await loadPdfFonts(pdfDoc);
 
     const page = pdfDoc.getPages()[0];
 
     const c = new Cursor(
       pdfDoc,
-      { regular, bold, mono, symbol },
+      fonts,
       extraPages,
       titleBlockMeta
     );
 
     c.setPage(page);
+
+    const regular = fonts.regular;
+    const bold = fonts.bold;
 
     fillTitleBlock(
       page,

@@ -17,8 +17,9 @@
 
 import { loadShearFromSession, loadBendingFromSession } from "../state/store.js";
 import { computeDeflection } from "./steelDeflection.js";
+import { loadPdfFonts } from "./reportText.js";
 
-const { PDFDocument, rgb, StandardFonts } = PDFLib;
+const { PDFDocument, rgb } = PDFLib;
 
 
 /* ═══════════════════════════════════════════════════════════
@@ -451,13 +452,11 @@ export async function generateReport() {
   const templateDoc = await PDFDocument.load(templateBytes);
   const extraPages  = await pdfDoc.copyPages(templateDoc, Array(10).fill(0));
 
-  const regular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold    = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-  const mono    = await pdfDoc.embedFont(StandardFonts.Courier);
-  const symbol  = await pdfDoc.embedFont(StandardFonts.Symbol);
-
+  const fonts = await loadPdfFonts(pdfDoc);
+  const regular = fonts.regular;
+  const bold = fonts.bold;
   const page = pdfDoc.getPages()[0];
-  const c    = new Cursor(pdfDoc, { regular, bold, mono, symbol }, extraPages, titleBlockMeta);
+  const c    = new Cursor(pdfDoc, fonts, extraPages, titleBlockMeta);
   c.setPage(page);
   fillTitleBlock(page, regular, { ...titleBlockMeta, sheetNo: "1" });
 
