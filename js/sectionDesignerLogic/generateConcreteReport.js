@@ -857,410 +857,424 @@ function drawBendingCheck(c, check, sectionNumber) {
  *  REPORT GENERATION
  * ═══════════════════════════════════════════════════════════ */
 
+let concreteReportGenerationPromise = null;
+
 export async function generateConcreteReport() {
-  try {
+  if (concreteReportGenerationPromise) {
+    return concreteReportGenerationPromise;
+  }
 
-    /* ─── Validation & Prerequisites ───────────────────────── */
+  concreteReportGenerationPromise = (async () => {
+    try {
 
-    const concreteInput = getConcreteSectionInput();
-    const shearRes = loadShearFromSession();
-    const bendingRes = loadBendingFromSession();
+      /* ─── Validation & Prerequisites ───────────────────────── */
 
-    if (!concreteInput || !(concreteInput.width > 0) || !(concreteInput.depth > 0)) {
-      return alert("Enter a valid concrete section before generating a report.");
-    }
+      const concreteInput = getConcreteSectionInput();
+      const shearRes = loadShearFromSession();
+      const bendingRes = loadBendingFromSession();
 
-    if (!bendingRes?.ok) {
-      return alert("Run the beam analysis first so bending moments are available.");
-    }
-
-    /* ─── Run Concrete Section Calculation ────────────────── */
-
-    const result = runConcreteSectionCalc();
-
-    if (!result?.isValid) {
-      return alert("Concrete section calculation could not be completed.");
-    }
-
-    const {
-      section,
-      material,
-      moments,
-      effectiveDepths,
-      providedSteel,
-      checks,
-      shearCheck,
-      governing,
-      notes
-    } = result;
-
-    /* ─── Modal Prompt ─────────────────────────────────────── */
-
-    const titleBlockMeta = await promptReportDetails();
-
-
-    /* ─── PDF Template & Font Embedding ────────────────────── */
-
-    const templateBytes = await fetch("../references/pdfTemplate.pdf")
-      .then((r) => r.arrayBuffer());
-
-    const pdfDoc = await PDFDocument.load(templateBytes);
-    const templateDoc = await PDFDocument.load(templateBytes);
-    const extraPages = await pdfDoc.copyPages(templateDoc, Array(10).fill(0));
-
-    const fonts = await loadPdfFonts(pdfDoc);
-
-    const page = pdfDoc.getPages()[0];
-
-    const c = new Cursor(
-      pdfDoc,
-      fonts,
-      extraPages,
-      titleBlockMeta
-    );
-
-    c.setPage(page);
-
-    const regular = fonts.regular;
-    const bold = fonts.bold;
-
-    fillTitleBlock(
-      page,
-      regular,
-      {
-        ...titleBlockMeta,
-        sheetNo: "1"
+      if (!concreteInput || !(concreteInput.width > 0) || !(concreteInput.depth > 0)) {
+        return alert("Enter a valid concrete section before generating a report.");
       }
-    );
+
+      if (!bendingRes?.ok) {
+        return alert("Run the beam analysis first so bending moments are available.");
+      }
+
+      /* ─── Run Concrete Section Calculation ────────────────── */
+
+      const result = runConcreteSectionCalc();
+
+      if (!result?.isValid) {
+        return alert("Concrete section calculation could not be completed.");
+      }
+
+      const {
+        section,
+        material,
+        moments,
+        effectiveDepths,
+        providedSteel,
+        checks,
+        shearCheck,
+        governing,
+        notes
+      } = result;
+
+      /* ─── Modal Prompt ─────────────────────────────────────── */
+
+      const titleBlockMeta = await promptReportDetails();
 
 
-    /* ─── Report Body Content ──────────────────────────────── */
+      /* ─── PDF Template & Font Embedding ────────────────────── */
 
-    /* ·· Section & Material ································· */
+      const templateBytes = await fetch("../references/pdfTemplate.pdf")
+        .then((r) => r.arrayBuffer());
 
-    heading(c, "1.  Section & Material");
+      const pdfDoc = await PDFDocument.load(templateBytes);
+      const templateDoc = await PDFDocument.load(templateBytes);
+      const extraPages = await pdfDoc.copyPages(templateDoc, Array(10).fill(0));
 
-    ln(c, "Reinforced concrete rectangular beam section", {
-      x: PG.indent,
-      font: bold
-    });
+      const fonts = await loadPdfFonts(pdfDoc);
 
-    richLn(c, `Grade:        ${section.grade || "—"}        f{sub:ck} = ${valueOrDash(material.fck, 0)} MPa`, { x: PG.indent });
-    richLn(c, `Rebar:        f{sub:yk} = ${valueOrDash(material.fyk, 0)} MPa`, { x: PG.indent });
-    richLn(c, `{sym:γ}{sub:c}:           ${GAMMA_C.toFixed(2)}`, { x: PG.indent });
-    richLn(c, `{sym:γ}{sub:s}:           ${GAMMA_S.toFixed(2)}`, { x: PG.indent });
-    richLn(c, `{sym:α}{sub:cc}:          ${ALPHA_CC.toFixed(2)}`, { x: PG.indent });
-    c.skip(PG.paraGap);
+      const page = pdfDoc.getPages()[0];
 
-    ln(c, "Section dimensions:", {
-      x: PG.indent,
-      font: bold
-    });
-
-    richLn(c, `b = ${valueOrDash(section.width, 0)} mm`, { x: PG.indent2 });
-    richLn(c, `h = ${valueOrDash(section.depth, 0)} mm`, { x: PG.indent2 });
-    richLn(c, `Nominal cover = ${valueOrDash(section.cover, 0)} mm`, { x: PG.indent2 });
-    richLn(c, `Link diameter = H${valueOrDash(section.linkDiameter, 0)}`, { x: PG.indent2 });
-
-    c.skip(PG.secGap);
-
-
-    /* ·· Reinforcement Summary ····························· */
-
-    heading(c, "2.  Reinforcement Summary");
-
-    drawReinforcementSummary(c, "Top reinforcement:", providedSteel.top);
-    c.skip(PG.paraGap);
-
-    drawReinforcementSummary(c, "Bottom reinforcement:", providedSteel.bottom);
-    c.skip(PG.secGap);
-
-
-    /* ·· Effective Depths ·································· */
-
-    heading(c, "3.  Effective Depths");
-
-    ln(c, "Sagging bending:", {
-      x: PG.indent,
-      font: bold
-    });
-
-    ln(
-      c,
-      "Bottom reinforcement is taken as the tension reinforcement.",
-      { x: PG.indent2 }
-    );
-
-    richLn(
-      c,
-      `Centroid of bottom steel from bottom face = ${valueOrDash(effectiveDepths.sagging.reinforcementCentroidFromBottom, 1)} mm`,
-      { x: PG.indent2 }
-    );
-
-    richLn(
-      c,
-      `d{sub:sagging} = h - y{sub:bottom steel} = ${valueOrDash(section.depth, 0)} - ${valueOrDash(effectiveDepths.sagging.reinforcementCentroidFromBottom, 1)} = ${valueOrDash(effectiveDepths.sagging.effectiveDepth, 1)} mm`,
-      { x: PG.indent2, font: bold }
-    );
-
-    c.skip(PG.paraGap);
-
-    ln(c, "Hogging bending:", {
-      x: PG.indent,
-      font: bold
-    });
-
-    ln(
-      c,
-      "Top reinforcement is taken as the tension reinforcement.",
-      { x: PG.indent2 }
-    );
-
-    richLn(
-      c,
-      `Centroid of top steel from top face = ${valueOrDash(effectiveDepths.hogging.reinforcementCentroidFromTop, 1)} mm`,
-      { x: PG.indent2 }
-    );
-
-    richLn(
-      c,
-      `d{sub:hogging} = h - y{sub:top steel} = ${valueOrDash(section.depth, 0)} - ${valueOrDash(effectiveDepths.hogging.reinforcementCentroidFromTop, 1)} = ${valueOrDash(effectiveDepths.hogging.effectiveDepth, 1)} mm`,
-      { x: PG.indent2, font: bold }
-    );
-
-    c.skip(PG.secGap);
-
-
-    /* ·· Design Forces ····································· */
-
-    heading(c, "4.  Design Forces  (from analysis)");
-
-    richLn(
-      c,
-      `M{sub:Ed,sagging} = ${momentOrDash(moments.maxSaggingMoment)} kNm`,
-      { x: PG.indent }
-    );
-
-    richLn(
-      c,
-      `M{sub:Ed,hogging} = ${momentOrDash(Math.abs(moments.maxHoggingMoment))} kNm`,
-      { x: PG.indent }
-    );
-
-    if (shearRes?.ok) {
-      const maxShear = Math.max(
-        Math.abs(shearRes.meta?.maxPos?.value ?? 0),
-        Math.abs(shearRes.meta?.maxNeg?.value ?? 0)
+      const c = new Cursor(
+        pdfDoc,
+        fonts,
+        extraPages,
+        titleBlockMeta
       );
 
-      richLn(
-        c,
-        `V{sub:Ed} = ${valueOrDash(maxShear, 2)} kN    (stored for future shear check)`,
-        { x: PG.indent }
-      );
-    } else {
-      ln(c, "Shear result not found. Shear check not included in this report.", {
-        x: PG.indent,
-        color: COL.grey
-      });
-    }
+      c.setPage(page);
 
-    c.skip(PG.secGap);
+      const regular = fonts.regular;
+      const bold = fonts.bold;
 
-
-    /* ·· Sagging Bending Check ····························· */
-
-    drawBendingCheck(c, checks.sagging, 5);
-
-
-    /* ·· Hogging Bending Check ····························· */
-
-    drawBendingCheck(c, checks.hogging, 6);
-
-
-    /* ·· Shear Resistance Check ··························· */
-
-    heading(c, "7.  Shear Resistance Check");
-
-    if (shearCheck?.isValid) {
-      const shearInputs = shearCheck.intermediate || {};
-      const rhoL = shearCheck.longitudinalSteelRatio ?? shearInputs.rhoL ?? 0;
-      const k = shearInputs.k ?? 0;
-      const z = shearInputs.z ?? 0;
-      const nu1 = shearInputs.nu1 ?? 0;
-      const crdC = shearInputs.crdC ?? 0;
-      const vMin = shearInputs.vMin ?? 0;
-
-      richLn(c, `V{sub:Ed} = ${valueOrDash(shearCheck.VEd, 2)} kN`, { x: PG.indent });
-      richLn(c, `Shear links: ${shearCheck.linkDiameter > 0 ? `${shearCheck.linkLegs}-leg Ø${shearCheck.linkDiameter} @ ${shearCheck.linkSpacing} mm c/c` : "not specified"}`, { x: PG.indent });
-
-      if (shearCheck.linkDiameter > 0 && shearCheck.linkSpacing > 0 && shearCheck.linkArea > 0) {
-        richLn(c, `A{sub:sw} = ${shearCheck.linkLegs} × π × Ø${valueOrDash(shearCheck.linkDiameter, 0)}{sup:2} / 4 = ${valueOrDash(shearCheck.linkArea, 1)} mm{sup:2}`, { x: PG.indent2 });
-        richLn(c, `s = ${valueOrDash(shearCheck.linkSpacing, 0)} mm`, { x: PG.indent2 });
-        richLn(c, `A{sub:sw}/s = ${valueOrDash(shearInputs.aswPerSpacing, 2)} mm{sup:2}/mm`, { x: PG.indent2 });
-        richLn(c, `f{sub:ywd} = f{sub:yk} / γ{sub:s} = ${valueOrDash(material.fyk, 0)} / ${GAMMA_S.toFixed(2)} = ${valueOrDash(shearCheck.reinforcementDesignStrength, 1)} MPa`, { x: PG.indent2 });
-        richLn(c, `z = 0.9d = 0.9 × ${valueOrDash(shearCheck.effectiveDepth, 1)} = ${valueOrDash(z, 1)} mm`, { x: PG.indent2 });
-        richLn(c, `cot{sym:θ} = ${valueOrDash(shearCheck.cotTheta, 2)}`, { x: PG.indent2 });
-      }
-
-      richLn(c, `ρ{sub:l} = A{sub:sl} / (b × d) = ${ratioOrDash(rhoL)}`, { x: PG.indent });
-      richLn(c, `k = 1 + {sym:√}(200 / d) = 1 + {sym:√}(200 / ${valueOrDash(shearCheck.effectiveDepth, 1)}) = ${valueOrDash(k, 3)}`, { x: PG.indent });
-      richLn(c, `C{sub:Rd,c} = 0.18 / γ{sub:c} = 0.18 / ${GAMMA_C.toFixed(2)} = ${valueOrDash(crdC, 3)}`, { x: PG.indent });
-      richLn(c, `v{sub:min} = 0.035 k{sup:1.5} {sym:√}(f{sub:ck}) = ${valueOrDash(vMin, 2)} MPa`, { x: PG.indent });
-      richLn(c, `V{sub:Rd,c} = max(C{sub:Rd,c} k (100ρ{sub:l} f{sub:ck}){sup:1/3}, v{sub:min}) × b × d = ${valueOrDash(shearCheck.VRdC, 2)} kN`, { x: PG.indent });
-
-      if (shearCheck.linkDiameter > 0 && shearCheck.linkSpacing > 0 && shearCheck.linkArea > 0) {
-        richLn(c, `V{sub:Rd,s} = (A{sub:sw}/s) × z × f{sub:ywd} × cot{sym:θ}`, { x: PG.indent });
-        richLn(c, `V{sub:Rd,s} = ${valueOrDash(shearInputs.aswPerSpacing, 2)} × ${valueOrDash(z, 1)} × ${valueOrDash(shearCheck.reinforcementDesignStrength, 1)} × ${valueOrDash(shearCheck.cotTheta, 2)} = ${valueOrDash(shearCheck.VRdS, 2)} kN`, { x: PG.indent });
-        richLn(c, `ν{sub:1} = min(0.6, 0.6(1 - f{sub:ck}/250)) = ${valueOrDash(nu1, 3)}`, { x: PG.indent });
-        richLn(c, `V{sub:Rd,max} = (b × z × ν{sub:1} × f{sub:cd}) / (cot{sym:θ} + tan{sym:θ}) = ${valueOrDash(shearCheck.VRdMax, 2)} kN`, { x: PG.indent });
-        richLn(c, `Design shear resistance with links: V{sub:Rd} = min(V{sub:Rd,s}, V{sub:Rd,max}) = ${valueOrDash(shearCheck.governingResistance, 2)} kN`, { x: PG.indent, font: bold });
-      } else {
-        richLn(c, `Design shear resistance: V{sub:Rd} = V{sub:Rd,c} = ${valueOrDash(shearCheck.governingResistance, 2)} kN`, { x: PG.indent, font: bold });
-      }
-
-      richLn(c, `Shear utilisation = V{sub:Ed} / V{sub:Rd} = ${valueOrDash(shearCheck.VEd, 2)} / ${valueOrDash(shearCheck.governingResistance, 2)} = ${ratioOrDash(shearCheck.utilisation)}`, { x: PG.indent });
-      ln(c, `Shear check: ${passText(shearCheck.pass)}`, {
-        x: PG.indent,
-        font: bold,
-        color: passColour(shearCheck.pass)
-      });
-    } else {
-      ln(c, shearCheck?.warning || "No valid shear check could be completed.", {
-        x: PG.indent,
-        color: COL.red
-      });
-    }
-
-    c.skip(PG.secGap);
-
-
-    /* ·· Governing Summary ································· */
-
-    heading(c, "8.  Governing Summary");
-
-    if (governing?.isValid) {
-      ln(
-        c,
-        `Governing bending direction: ${governing.momentType}`,
+      fillTitleBlock(
+        page,
+        regular,
         {
-          x: PG.indent,
-          font: bold
+          ...titleBlockMeta,
+          sheetNo: "1"
         }
       );
 
-      richLn(
-        c,
-        `Governing utilisation = ${ratioOrDash(governing.utilisation)}`,
-        {
-          x: PG.indent
-        }
-      );
 
-      ln(
-        c,
-        `Overall result: ${passText(governing.pass)}`,
-        {
-          x: PG.indent,
-          font: bold,
-          color: passColour(governing.pass)
-        }
-      );
-    } else {
-      ln(c, governing?.message || "No governing check could be determined.", {
+      /* ─── Report Body Content ──────────────────────────────── */
+
+      /* ·· Section & Material ································· */
+
+      heading(c, "1.  Section & Material");
+
+      ln(c, "Reinforced concrete rectangular beam section", {
         x: PG.indent,
-        color: COL.red
+        font: bold
       });
-    }
 
-    c.skip(PG.secGap);
-
-
-    /* ·· End Notes ········································· */
-
-    heading(c, "9.  Notes & Scope");
-
-    ln(c, "This report covers a simplified ULS rectangular beam bending check.", {
-      x: PG.indent,
-      color: COL.grey
-    });
-
-    ln(c, "The sagging check uses bottom reinforcement as tension steel.", {
-      x: PG.indent,
-      color: COL.grey
-    });
-
-    ln(c, "The hogging check uses top reinforcement as tension steel.", {
-      x: PG.indent,
-      color: COL.grey
-    });
-
-    ln(c, "Compression reinforcement is checked where K exceeds K'.", {
-      x: PG.indent,
-      color: COL.grey
-    });
-
-    c.skip(PG.paraGap);
-
-    ln(c, "Checks not included in this report:", {
-      x: PG.indent,
-      font: bold,
-      color: COL.grey
-    });
-
-    ln(c, "Shear resistance, link design, anchorage, lap lengths, curtailment, crack control,", {
-      x: PG.indent2,
-      color: COL.grey
-    });
-
-    ln(c, "deflection, fire resistance, robustness, bearing, and detailed support detailing.", {
-      x: PG.indent2,
-      color: COL.grey
-    });
-
-    if (Array.isArray(notes) && notes.length) {
+      richLn(c, `Grade:        ${section.grade || "—"}        f{sub:ck} = ${valueOrDash(material.fck, 0)} MPa`, { x: PG.indent });
+      richLn(c, `Rebar:        f{sub:yk} = ${valueOrDash(material.fyk, 0)} MPa`, { x: PG.indent });
+      richLn(c, `{sym:γ}{sub:c}:           ${GAMMA_C.toFixed(2)}`, { x: PG.indent });
+      richLn(c, `{sym:γ}{sub:s}:           ${GAMMA_S.toFixed(2)}`, { x: PG.indent });
+      richLn(c, `{sym:α}{sub:cc}:          ${ALPHA_CC.toFixed(2)}`, { x: PG.indent });
       c.skip(PG.paraGap);
 
-      ln(c, "Calculation notes:", {
+      ln(c, "Section dimensions:", {
+        x: PG.indent,
+        font: bold
+      });
+
+      richLn(c, `b = ${valueOrDash(section.width, 0)} mm`, { x: PG.indent2 });
+      richLn(c, `h = ${valueOrDash(section.depth, 0)} mm`, { x: PG.indent2 });
+      richLn(c, `Nominal cover = ${valueOrDash(section.cover, 0)} mm`, { x: PG.indent2 });
+      richLn(c, `Link diameter = H${valueOrDash(section.linkDiameter, 0)}`, { x: PG.indent2 });
+
+      c.skip(PG.secGap);
+
+
+      /* ·· Reinforcement Summary ····························· */
+
+      heading(c, "2.  Reinforcement Summary");
+
+      drawReinforcementSummary(c, "Top reinforcement:", providedSteel.top);
+      c.skip(PG.paraGap);
+
+      drawReinforcementSummary(c, "Bottom reinforcement:", providedSteel.bottom);
+      c.skip(PG.secGap);
+
+
+      /* ·· Effective Depths ·································· */
+
+      heading(c, "3.  Effective Depths");
+
+      ln(c, "Sagging bending:", {
+        x: PG.indent,
+        font: bold
+      });
+
+      ln(
+        c,
+        "Bottom reinforcement is taken as the tension reinforcement.",
+        { x: PG.indent2 }
+      );
+
+      richLn(
+        c,
+        `Centroid of bottom steel from bottom face = ${valueOrDash(effectiveDepths.sagging.reinforcementCentroidFromBottom, 1)} mm`,
+        { x: PG.indent2 }
+      );
+
+      richLn(
+        c,
+        `d{sub:sagging} = h - y{sub:bottom steel} = ${valueOrDash(section.depth, 0)} - ${valueOrDash(effectiveDepths.sagging.reinforcementCentroidFromBottom, 1)} = ${valueOrDash(effectiveDepths.sagging.effectiveDepth, 1)} mm`,
+        { x: PG.indent2, font: bold }
+      );
+
+      c.skip(PG.paraGap);
+
+      ln(c, "Hogging bending:", {
+        x: PG.indent,
+        font: bold
+      });
+
+      ln(
+        c,
+        "Top reinforcement is taken as the tension reinforcement.",
+        { x: PG.indent2 }
+      );
+
+      richLn(
+        c,
+        `Centroid of top steel from top face = ${valueOrDash(effectiveDepths.hogging.reinforcementCentroidFromTop, 1)} mm`,
+        { x: PG.indent2 }
+      );
+
+      richLn(
+        c,
+        `d{sub:hogging} = h - y{sub:top steel} = ${valueOrDash(section.depth, 0)} - ${valueOrDash(effectiveDepths.hogging.reinforcementCentroidFromTop, 1)} = ${valueOrDash(effectiveDepths.hogging.effectiveDepth, 1)} mm`,
+        { x: PG.indent2, font: bold }
+      );
+
+      c.skip(PG.secGap);
+
+
+      /* ·· Design Forces ····································· */
+
+      heading(c, "4.  Design Forces  (from analysis)");
+
+      richLn(
+        c,
+        `M{sub:Ed,sagging} = ${momentOrDash(moments.maxSaggingMoment)} kNm`,
+        { x: PG.indent }
+      );
+
+      richLn(
+        c,
+        `M{sub:Ed,hogging} = ${momentOrDash(Math.abs(moments.maxHoggingMoment))} kNm`,
+        { x: PG.indent }
+      );
+
+      if (shearRes?.ok) {
+        const maxShear = Math.max(
+          Math.abs(shearRes.meta?.maxPos?.value ?? 0),
+          Math.abs(shearRes.meta?.maxNeg?.value ?? 0)
+        );
+
+        richLn(
+          c,
+          `V{sub:Ed} = ${valueOrDash(maxShear, 2)} kN    (stored for future shear check)`,
+          { x: PG.indent }
+        );
+      } else {
+        ln(c, "Shear result not found. Shear check not included in this report.", {
+          x: PG.indent,
+          color: COL.grey
+        });
+      }
+
+      c.skip(PG.secGap);
+
+
+      /* ·· Sagging Bending Check ····························· */
+
+      drawBendingCheck(c, checks.sagging, 5);
+
+
+      /* ·· Hogging Bending Check ····························· */
+
+      drawBendingCheck(c, checks.hogging, 6);
+
+
+      /* ·· Shear Resistance Check ··························· */
+
+      heading(c, "7.  Shear Resistance Check");
+
+      if (shearCheck?.isValid) {
+        const shearInputs = shearCheck.intermediate || {};
+        const rhoL = shearCheck.longitudinalSteelRatio ?? shearInputs.rhoL ?? 0;
+        const k = shearInputs.k ?? 0;
+        const z = shearInputs.z ?? 0;
+        const nu1 = shearInputs.nu1 ?? 0;
+        const crdC = shearInputs.crdC ?? 0;
+        const vMin = shearInputs.vMin ?? 0;
+
+        richLn(c, `V{sub:Ed} = ${valueOrDash(shearCheck.VEd, 2)} kN`, { x: PG.indent });
+        richLn(c, `Shear links: ${shearCheck.linkDiameter > 0 ? `${shearCheck.linkLegs}-leg Ø${shearCheck.linkDiameter} @ ${shearCheck.linkSpacing} mm c/c` : "not specified"}`, { x: PG.indent });
+
+        if (shearCheck.linkDiameter > 0 && shearCheck.linkSpacing > 0 && shearCheck.linkArea > 0) {
+          richLn(c, `A{sub:sw} = ${shearCheck.linkLegs} × π × Ø${valueOrDash(shearCheck.linkDiameter, 0)}{sup:2} / 4 = ${valueOrDash(shearCheck.linkArea, 1)} mm{sup:2}`, { x: PG.indent2 });
+          richLn(c, `s = ${valueOrDash(shearCheck.linkSpacing, 0)} mm`, { x: PG.indent2 });
+          richLn(c, `A{sub:sw}/s = ${valueOrDash(shearInputs.aswPerSpacing, 2)} mm{sup:2}/mm`, { x: PG.indent2 });
+          richLn(c, `f{sub:ywd} = f{sub:yk} / γ{sub:s} = ${valueOrDash(material.fyk, 0)} / ${GAMMA_S.toFixed(2)} = ${valueOrDash(shearCheck.reinforcementDesignStrength, 1)} MPa`, { x: PG.indent2 });
+          richLn(c, `z = 0.9d = 0.9 × ${valueOrDash(shearCheck.effectiveDepth, 1)} = ${valueOrDash(z, 1)} mm`, { x: PG.indent2 });
+          richLn(c, `cot{sym:θ} = ${valueOrDash(shearCheck.cotTheta, 2)}`, { x: PG.indent2 });
+        }
+
+        richLn(c, `ρ{sub:l} = A{sub:sl} / (b × d) = ${ratioOrDash(rhoL)}`, { x: PG.indent });
+        richLn(c, `k = 1 + {sym:√}(200 / d) = 1 + {sym:√}(200 / ${valueOrDash(shearCheck.effectiveDepth, 1)}) = ${valueOrDash(k, 3)}`, { x: PG.indent });
+        richLn(c, `C{sub:Rd,c} = 0.18 / γ{sub:c} = 0.18 / ${GAMMA_C.toFixed(2)} = ${valueOrDash(crdC, 3)}`, { x: PG.indent });
+        richLn(c, `v{sub:min} = 0.035 k{sup:1.5} {sym:√}(f{sub:ck}) = ${valueOrDash(vMin, 2)} MPa`, { x: PG.indent });
+        richLn(c, `V{sub:Rd,c} = max(C{sub:Rd,c} k (100ρ{sub:l} f{sub:ck}){sup:1/3}, v{sub:min}) × b × d = ${valueOrDash(shearCheck.VRdC, 2)} kN`, { x: PG.indent });
+
+        if (shearCheck.linkDiameter > 0 && shearCheck.linkSpacing > 0 && shearCheck.linkArea > 0) {
+          richLn(c, `V{sub:Rd,s} = (A{sub:sw}/s) × z × f{sub:ywd} × cot{sym:θ}`, { x: PG.indent });
+          richLn(c, `V{sub:Rd,s} = ${valueOrDash(shearInputs.aswPerSpacing, 2)} × ${valueOrDash(z, 1)} × ${valueOrDash(shearCheck.reinforcementDesignStrength, 1)} × ${valueOrDash(shearCheck.cotTheta, 2)} = ${valueOrDash(shearCheck.VRdS, 2)} kN`, { x: PG.indent });
+          richLn(c, `ν{sub:1} = min(0.6, 0.6(1 - f{sub:ck}/250)) = ${valueOrDash(nu1, 3)}`, { x: PG.indent });
+          richLn(c, `V{sub:Rd,max} = (b × z × ν{sub:1} × f{sub:cd}) / (cot{sym:θ} + tan{sym:θ}) = ${valueOrDash(shearCheck.VRdMax, 2)} kN`, { x: PG.indent });
+          richLn(c, `Design shear resistance with links: V{sub:Rd} = min(V{sub:Rd,s}, V{sub:Rd,max}) = ${valueOrDash(shearCheck.governingResistance, 2)} kN`, { x: PG.indent, font: bold });
+        } else {
+          richLn(c, `Design shear resistance: V{sub:Rd} = V{sub:Rd,c} = ${valueOrDash(shearCheck.governingResistance, 2)} kN`, { x: PG.indent, font: bold });
+        }
+
+        richLn(c, `Shear utilisation = V{sub:Ed} / V{sub:Rd} = ${valueOrDash(shearCheck.VEd, 2)} / ${valueOrDash(shearCheck.governingResistance, 2)} = ${ratioOrDash(shearCheck.utilisation)}`, { x: PG.indent });
+        ln(c, `Shear check: ${passText(shearCheck.pass)}`, {
+          x: PG.indent,
+          font: bold,
+          color: passColour(shearCheck.pass)
+        });
+      } else {
+        ln(c, shearCheck?.warning || "No valid shear check could be completed.", {
+          x: PG.indent,
+          color: COL.red
+        });
+      }
+
+      c.skip(PG.secGap);
+
+
+      /* ·· Governing Summary ································· */
+
+      heading(c, "8.  Governing Summary");
+
+      if (governing?.isValid) {
+        ln(
+          c,
+          `Governing bending direction: ${governing.momentType}`,
+          {
+            x: PG.indent,
+            font: bold
+          }
+        );
+
+        richLn(
+          c,
+          `Governing utilisation = ${ratioOrDash(governing.utilisation)}`,
+          {
+            x: PG.indent
+          }
+        );
+
+        ln(
+          c,
+          `Overall result: ${passText(governing.pass)}`,
+          {
+            x: PG.indent,
+            font: bold,
+            color: passColour(governing.pass)
+          }
+        );
+      } else {
+        ln(c, governing?.message || "No governing check could be determined.", {
+          x: PG.indent,
+          color: COL.red
+        });
+      }
+
+      c.skip(PG.secGap);
+
+
+      /* ·· End Notes ········································· */
+
+      heading(c, "9.  Notes & Scope");
+
+      ln(c, "This report covers a simplified ULS rectangular beam bending check.", {
+        x: PG.indent,
+        color: COL.grey
+      });
+
+      ln(c, "The sagging check uses bottom reinforcement as tension steel.", {
+        x: PG.indent,
+        color: COL.grey
+      });
+
+      ln(c, "The hogging check uses top reinforcement as tension steel.", {
+        x: PG.indent,
+        color: COL.grey
+      });
+
+      ln(c, "Compression reinforcement is checked where K exceeds K'.", {
+        x: PG.indent,
+        color: COL.grey
+      });
+
+      c.skip(PG.paraGap);
+
+      ln(c, "Checks not included in this report:", {
         x: PG.indent,
         font: bold,
         color: COL.grey
       });
 
-      notes.forEach((note) => {
-        ln(c, `- ${note}`, {
-          x: PG.indent2,
+      ln(c, "Shear resistance, link design, anchorage, lap lengths, curtailment, crack control,", {
+        x: PG.indent2,
+        color: COL.grey
+      });
+
+      ln(c, "deflection, fire resistance, robustness, bearing, and detailed support detailing.", {
+        x: PG.indent2,
+        color: COL.grey
+      });
+
+      if (Array.isArray(notes) && notes.length) {
+        c.skip(PG.paraGap);
+
+        ln(c, "Calculation notes:", {
+          x: PG.indent,
+          font: bold,
           color: COL.grey
         });
+
+        notes.forEach((note) => {
+          ln(c, `- ${note}`, {
+            x: PG.indent2,
+            color: COL.grey
+          });
+        });
+      }
+
+
+      /* ─── PDF Save & Download ──────────────────────────────── */
+
+      const pdfBytes = await pdfDoc.save();
+
+      const blob = new Blob([pdfBytes], {
+        type: "application/pdf"
       });
+
+      const url = URL.createObjectURL(blob);
+
+      const sectionName = `${section.width}x${section.depth} RC Beam`;
+
+      const a = document.createElement("a");
+
+      a.href = url;
+      a.download = `${sectionName} - Concrete Section Check.pdf`;
+      a.click();
+
+      URL.revokeObjectURL(url);
+
+    } catch (err) {
+      if (err.message === "cancelled") return;
+
+      console.error("Concrete report generation failed:", err);
+      alert("Concrete report generation failed:\n" + err.message);
     }
+  })();
 
-
-    /* ─── PDF Save & Download ──────────────────────────────── */
-
-    const pdfBytes = await pdfDoc.save();
-
-    const blob = new Blob([pdfBytes], {
-      type: "application/pdf"
-    });
-
-    const url = URL.createObjectURL(blob);
-
-    const sectionName = `${section.width}x${section.depth} RC Beam`;
-
-    const a = document.createElement("a");
-
-    a.href = url;
-    a.download = `${sectionName} - Concrete Section Check.pdf`;
-    a.click();
-
-    URL.revokeObjectURL(url);
-
-  } catch (err) {
-    if (err.message === "cancelled") return;
-
-    console.error("Concrete report generation failed:", err);
-    alert("Concrete report generation failed:\n" + err.message);
+  try {
+    return await concreteReportGenerationPromise;
+  } finally {
+    concreteReportGenerationPromise = null;
   }
 }
 

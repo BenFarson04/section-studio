@@ -1,7 +1,35 @@
-import { generateReport } from "./generateReport.js";
 import { generateConcreteReport } from "./generateConcreteReport.js";
+import { generateReport } from "./generateReport.js";
 
 let reportButtonBound = false;
+
+export function createReportGenerationRunner({
+  concreteGenerator = generateConcreteReport,
+  steelGenerator = generateReport,
+} = {}) {
+  let isGenerating = false;
+
+  return async function runReportGeneration(materialOverride) {
+    if (isGenerating) {
+      return;
+    }
+
+    isGenerating = true;
+
+    try {
+      const material = materialOverride ?? document.getElementById("designMaterial")?.value ?? "steel";
+
+      if (material === "concrete") {
+        await concreteGenerator();
+        return;
+      }
+
+      await steelGenerator();
+    } finally {
+      isGenerating = false;
+    }
+  };
+}
 
 export function bindReportGenerationButton() {
   if (reportButtonBound) return;
@@ -12,14 +40,9 @@ export function bindReportGenerationButton() {
 
   reportButtonBound = true;
 
-  button.addEventListener("click", async () => {
-    const material = document.getElementById("designMaterial")?.value ?? "steel";
+  const runReportGeneration = createReportGenerationRunner();
 
-    if (material === "concrete") {
-      await generateConcreteReport();
-      return;
-    }
-
-    await generateReport();
+  button.addEventListener("click", () => {
+    void runReportGeneration();
   });
 }
