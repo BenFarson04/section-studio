@@ -922,7 +922,12 @@ export async function generateConcreteReport() {
 
       const pdfDoc = await PDFDocument.load(templateBytes);
       const templateDoc = await PDFDocument.load(templateBytes);
-      const extraPages = await pdfDoc.copyPages(templateDoc, Array(10).fill(0));
+      const extraPages = [];
+      for (let pageCopyIndex = 0; pageCopyIndex < 10; pageCopyIndex += 1) {
+        // pdf-lib shares nested Contents arrays across repeated indices in one copyPages call.
+        const [extraPage] = await pdfDoc.copyPages(templateDoc, [0]);
+        extraPages.push(extraPage);
+      }
 
       const fonts = await loadPdfFonts(pdfDoc);
 

@@ -1,5 +1,11 @@
 # Report Duplication Diagnostic
 
+> Historical diagnosis of the pre-fix implementation. The fix status below reflects the current source.
+
+## Fix Status
+
+The concrete generator now copies each extra template page in a separate `copyPages(templateDoc, [0])` call, so each copied page gets an independent pdf-lib object copier and mutable `Contents` array. The existing ten-page reserve and `Cursor.ensure()` pagination behavior are unchanged. `tests/report-pdf-page-independence.mjs` verifies independent page mutation with real pdf-lib, serializes/reloads a 13-page copy scenario, and generates/reloads the original three-page concrete fixture.
+
 ## 1. Reproduction Pattern
 
 The supplied observation is a single concrete report with three pages: page 1 is normal; page 2 begins the continued Section 6 Hogging calculation at `K used = min(K, K') = 0.069` and proceeds through Section 9; page 3 shows that same continuation through the report end.
@@ -115,4 +121,4 @@ The test directly calls the concrete generator once and asserts each section/tex
 
 This mechanism is directly confirmed by inspecting the installed pdf-lib implementation and the actual template with real pdf-lib. The full uploaded generated PDF binary was not available to independently inspect; the matching source trace and object-graph experiment reproduce the stated three-page boundary and explain the supplied observation. The regression fixture's final literal above should be checked against the original PDF if its optional calculation notes differ.
 
-Temporary renderer trace instrumentation was removed after the run. The existing beam-analysis and report-render regression scripts both pass in the restored worktree. Only this diagnostic document was added; no source, test, template, or configuration changes remain.
+The temporary renderer trace instrumentation used to establish this diagnosis was removed after the run. This document records the confirmed pre-fix cause; the separate regression test and current concrete generator now cover and avoid the shared-Contents behavior.

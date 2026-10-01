@@ -226,6 +226,14 @@ const third = runner('concrete');
 await third;
 assert.equal(generationCalls.filter((item) => item === 'concrete').length, 2, 'a fresh generation starts after completion');
 
+const steelRunner = createReportGenerationRunner({
+  concreteGenerator: async () => generationCalls.push('unexpected-concrete'),
+  steelGenerator: async () => generationCalls.push('steel')
+});
+await steelRunner('steel');
+assert.equal(generationCalls.filter((item) => item === 'steel').length, 1, 'steel material routes to the steel generator');
+assert.equal(generationCalls.filter((item) => item === 'unexpected-concrete').length, 0, 'steel material does not route to the concrete generator');
+
 const { generateConcreteReport } = await import('../js/sectionDesignerLogic/generateConcreteReport.js');
 drawLog.length = 0;
 const reportForm = document.getElementById('reportForm');
