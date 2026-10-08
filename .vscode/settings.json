@@ -3,6 +3,14 @@
         "/^node --check js/main\\.js && node --check js/state/manualDesignerMaterialToggle\\.js && node --check js/sectionDesignerLogic/concreteSectionCalc\\.js && node --check js/sectionDesignerLogic/sectionCalcShared\\.js && node --check js/sectionDesignerLogic/ubUcSectionCalc\\.js && node --check js/sectionDesignerLogic/pfcSectionCalc\\.js && node --check js/sectionDesignerLogic/eaUaSectionCalc\\.js && node --check js/sectionDesignerLogic/shsRhsSectionCalc\\.js && node --check js/sectionDesignerLogic/chsSectionCalc\\.js$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^git status --short && printf '\\\\nTop-level files:\\\\n' && ls -la$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^python3 -m http\\.server 4173$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

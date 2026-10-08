@@ -366,12 +366,12 @@ input[type="date"],
  * ═══════════════════════════════════════════════════════════ */
 
 .workspace{
-  width: min(1440px, 100%);
+  width: min(1680px, 100%);
   margin: 0 auto;
-  padding: 28px 32px;
+  padding: 28px clamp(20px, 2vw, 32px);
   display: grid;
-  grid-template-columns: 380px minmax(420px, 1fr) 420px;
-  gap: 22px;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(400px, 1.45fr) minmax(280px, 1fr);
+  gap: clamp(16px, 1.5vw, 22px);
   align-items: start;
 }
 
@@ -381,7 +381,7 @@ input[type="date"],
   gap: 18px;
 }
 
-@media (max-width: 1180px){
+@media (max-width: 1060px){
   .workspace{ grid-template-columns: 1fr; }
 }
 
@@ -1193,7 +1193,7 @@ tr.selected td{
 
 .canvas-shell{
   position: relative;
-  height: clamp(440px, 60vh, 760px);
+  height: clamp(360px, calc(100vh - 220px), 820px);
   border-radius: var(--radius-sm);
   border: 1px solid var(--ink);
   overflow: hidden;
@@ -1205,6 +1205,10 @@ tr.selected td{
     inset 0 0 0 4px var(--paper-3),
     inset 0 0 0 5px var(--rule-medium),
     var(--shadow-2);
+}
+
+@media (max-width: 1060px){
+  .canvas-shell{ height: clamp(320px, 52vh, 560px); }
 }
 
 /* ·· Corner registration marks (4 corners, vermillion) ·· */
@@ -1956,5 +1960,3 @@ canvas{
     padding: 18px 16px 28px;
   }
 }
-
-
