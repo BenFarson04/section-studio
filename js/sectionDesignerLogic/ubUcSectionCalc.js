@@ -50,11 +50,11 @@ export function runUbUcDesignCheck() {
   const type  = document.getElementById("sectionTypeSelect")?.value;
 
   if (!sec || !grade) {
-    msg(container, "Select a section and grade to see utilisations.");
+    msg(container, "Select section and grade.");
     return null;
   }
   if (type !== "UB" && type !== "UC") {
-    msg(container, "Utilisation checks available for UB and UC sections only.");
+    msg(container, "UB/UC sections only.");
     return null;
   }
 
@@ -62,7 +62,7 @@ export function runUbUcDesignCheck() {
   const bendingRes = loadBendingFromSession();
 
   if (!shearRes?.ok || !bendingRes?.ok) {
-    msg(container, "Run the beam analysis first to see utilisations.");
+    msg(container, "Run beam analysis first.");
     return null;
   }
 
@@ -88,7 +88,7 @@ export function runUbUcDesignCheck() {
   const { h, b, tw, tf, r, d } = sec;
 
   if (!h || !b || !tw || !tf || !r || !d) {
-    msg(container, "Section geometry incomplete — cannot run checks.");
+    msg(container, "Incomplete section geometry.");
     return null;
   }
 
@@ -97,7 +97,7 @@ export function runUbUcDesignCheck() {
   const Wel = sec.elastic_modulus  * 1e3;
 
   if (!A || !Wpl || !Wel) {
-    msg(container, "Section properties (A, Wpl, Wel) not found — cannot run checks.");
+    msg(container, "Missing section properties (A, Wpl, Wel).");
     return null;
   }
 
@@ -235,8 +235,7 @@ function render(el, r) {
     if (r.shearUtil > 0.5) {
       bendingNote = `
         <p class="small muted">
-          V<sub>Ed</sub> / V<sub>pl,Rd</sub> &gt; 0.5 —
-          reduced f<sub>y</sub> used for bending (cl. 6.2.8)
+          High shear: reduced f<sub>y</sub> used for bending (cl. 6.2.8).
         </p>`;
     }
   }

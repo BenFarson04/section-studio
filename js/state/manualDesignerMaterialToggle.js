@@ -65,12 +65,12 @@ function initialiseMaterialToggle() {
       utilisationContainer.innerHTML = isSteel
         ? `
           <p class="muted small">
-            Select a UB/UC section and run analysis to see utilisations.
+            Select section and grade.
           </p>
         `
         : `
           <p class="muted small">
-            Enter concrete geometry and reinforcement, then run analysis to see concrete checks.
+            Enter geometry and reinforcement.
           </p>
         `;
     }

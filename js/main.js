@@ -261,7 +261,7 @@ function resetConcreteUtilisationMessage() {
 
   utilContainer.innerHTML = `
     <p class="muted small">
-      Enter concrete geometry and reinforcement, then run analysis to see concrete checks.
+      Enter geometry and reinforcement.
     </p>
   `;
 }
@@ -275,7 +275,7 @@ function resetSteelUtilisationMessage() {
 
   utilContainer.innerHTML = `
     <p class="muted small">
-      Select a UB/UC section and run analysis to see utilisations.
+      Select section and grade.
     </p>
   `;
 }
@@ -438,7 +438,7 @@ function calculateConcreteDesignerPage() {
     if (utilContainer) {
       utilContainer.innerHTML = `
         <p class="muted small">
-          Concrete design check failed. See console for details.
+          Concrete design check failed.
         </p>
       `;
     }
@@ -472,7 +472,7 @@ function calculateSteelDesignerPage() {
     if (utilContainer) {
       utilContainer.innerHTML = `
         <p class="muted small">
-          No utilisation checks available for this section type.
+          No checks available for this type.
         </p>
       `;
     }
@@ -530,7 +530,7 @@ function appendDeflectionInfo() {
       <span class="deflection-info__span">${ratioText}</span>
     </div>
     <p class="muted small">
-      Peak at x = ${formatNumber(xMax, 2)} m · elastic, self-weight excluded · no limit applied.
+      x = ${formatNumber(xMax, 2)} m · self-weight excluded · no limit set.
     </p>
   `;
 
@@ -795,4 +795,3 @@ if (document.readyState === "loading") {
 } else {
   initApp();
 }
-

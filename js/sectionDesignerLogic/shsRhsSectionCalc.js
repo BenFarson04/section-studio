@@ -58,7 +58,7 @@ export function runShsRhsDesignCheck() {
   const type  = document.getElementById("sectionTypeSelect")?.value;
 
   if (!sec || !grade) {
-    msg(container, "Select a section and grade to see utilisations.");
+    msg(container, "Select section and grade.");
     return null;
   }
 
@@ -70,7 +70,7 @@ export function runShsRhsDesignCheck() {
   const bendingRes = loadBendingFromSession();
 
   if (!shearRes?.ok || !bendingRes?.ok) {
-    msg(container, "Run the beam analysis first to see utilisations.");
+    msg(container, "Run beam analysis first.");
     return null;
   }
 
@@ -96,7 +96,7 @@ export function runShsRhsDesignCheck() {
   const { h, b, t } = sec;
 
   if (!h || !b || !t) {
-    msg(container, "Section geometry incomplete — cannot run checks.");
+    msg(container, "Incomplete section geometry.");
     return null;
   }
 
@@ -107,7 +107,7 @@ export function runShsRhsDesignCheck() {
   const Wpl = firstNumber(sec.plasticModulusYy) * 1e3;
 
   if (!A || !Wel || !Wpl) {
-    msg(container, "Section properties (A, Wel, Wpl) not found — cannot run checks.");
+    msg(container, "Missing section properties (A, W<sub>el</sub>, W<sub>pl</sub>).");
     return null;
   }
 
@@ -254,17 +254,10 @@ function render(el, r) {
     if (r.shearUtil > 0.5) {
       notes += `
         <p class="small muted">
-          V<sub>Ed</sub> / V<sub>pl,Rd</sub> &gt; 0.5 —
-          reduced f<sub>y</sub> used for bending (cl. 6.2.8)
+          High shear: reduced f<sub>y</sub> used for bending (cl. 6.2.8).
         </p>`;
     }
   }
-
-  notes += `
-    <p class="small muted">
-      Note: This check covers cross-section bending/shear only.
-      No LTB check required for hollow sections.
-    </p>`;
 
   el.innerHTML = `
     <div class="results-group">

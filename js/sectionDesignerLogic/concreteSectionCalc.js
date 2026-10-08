@@ -213,7 +213,7 @@ const hogging = checkConcreteBending({
 
     governing: getGoverningCheck(sagging, hogging),
 
-    notes: getSectionCalcNotes(sagging, hogging, moments)
+    notes: getSectionCalcNotes(moments)
   };
 }
 
@@ -233,7 +233,7 @@ export function renderConcreteSectionSummary(el, result) {
         <h3>Design summary</h3>
 
         <p class="muted small">
-          ${result?.governing?.message ?? "Concrete section check is not available."}
+          ${result?.governing?.message ?? "Concrete check unavailable."}
         </p>
       </div>
     `;
@@ -250,9 +250,9 @@ export function renderConcreteSectionSummary(el, result) {
   const governingText = governing?.isValid
     ? `
       <p class="small muted">
-        Governing check: ${capitalise(governing.momentType)}
-        · utilisation = ${formatNumber(governing.utilisation, 3)}
-        · result: ${governing.pass ? "PASS" : "FAIL"}
+        Governing · ${capitalise(governing.momentType)}
+        · ${formatNumber(governing.utilisation, 3)}
+        · ${governing.pass ? "PASS" : "FAIL"}
       </p>
     `
     : "";
@@ -287,11 +287,6 @@ export function renderConcreteSectionSummary(el, result) {
       </div>
 
       ${governingText}
-
-      <p class="small muted">
-        Use the concrete report button to generate the PDF calculation report.
-      </p>
-
       ${notes}
     </div>
   `;
@@ -1160,43 +1155,13 @@ function getCheckUtilisation(check) {
   NOTES
 ═══════════════════════════════════════════════════════════ */
 
-function getSectionCalcNotes(sagging, hogging, moments) {
-  const notes = [];
-
+function getSectionCalcNotes(moments) {
   if (!moments.hasResult) {
-    notes.push(
-      "No stored bending result was found. Sagging and hogging checks could not use analysis moments."
-    );
+    return ["No stored bending result found."];
   }
 
-  notes.push(
-    "The shear check uses the maximum absolute SFD value from the saved beam analysis as VEd and evaluates EC2 concrete and link resistance checks for the rectangular concrete section."
-  );
-
-  if (sagging?.k?.compressionRequired) {
-    notes.push(
-      "Sagging K exceeds K', so compression reinforcement is required in the top of the section."
-    );
-  }
-
-  if (hogging?.k?.compressionRequired) {
-    notes.push(
-      "Hogging K exceeds K', so compression reinforcement is required in the bottom of the section."
-    );
-  }
-
-  notes.push(
-    "This is a simplified rectangular-section ULS bending check only."
-  );
-
-  notes.push(
-    "Further checks normally required for a full RC beam design include shear, anchorage, curtailment, crack control, deflection, durability cover, spacing, fire resistance where relevant, and support detailing."
-  );
-
-  return notes;
+  return [];
 }
-
-
 
 /* ═══════════════════════════════════════════════════════════
   EMPTY RESULTS

@@ -54,7 +54,7 @@ export function runEaUaDesignCheck() {
   const type  = document.getElementById("sectionTypeSelect")?.value;
 
   if (!sec || !grade) {
-    msg(container, "Select a section and grade to see utilisations.");
+    msg(container, "Select section and grade.");
     return null;
   }
 
@@ -66,7 +66,7 @@ export function runEaUaDesignCheck() {
   const bendingRes = loadBendingFromSession();
 
   if (!shearRes?.ok || !bendingRes?.ok) {
-    msg(container, "Run the beam analysis first to see utilisations.");
+    msg(container, "Run beam analysis first.");
     return null;
   }
 
@@ -92,7 +92,7 @@ export function runEaUaDesignCheck() {
   const { h, b, t, r1 } = sec;
 
   if (!h || !b || !t || !r1) {
-    msg(container, "Section geometry incomplete — cannot run checks.");
+    msg(container, "Incomplete section geometry.");
     return null;
   }
 
@@ -100,7 +100,7 @@ export function runEaUaDesignCheck() {
   const Wel = firstNumber(sec.elasticModulusYy) * 1e3;
 
   if (!A || !Wel) {
-    msg(container, "Section properties (A, Wel) not found — cannot run checks.");
+    msg(container, "Missing section properties (A, W<sub>el</sub>).");
     return null;
   }
 
@@ -241,17 +241,10 @@ function render(el, r) {
     if (r.shearUtil > 0.5) {
       notes += `
         <p class="small muted">
-          V<sub>Ed</sub> / V<sub>pl,Rd</sub> &gt; 0.5.
-          Reduced f<sub>y</sub> used for bending (cl. 6.2.8)
+          High shear: reduced f<sub>y</sub> used for bending (cl. 6.2.8).
         </p>`;
     }
   }
-
-  notes += `
-    <p class="small muted">
-      Note: Elastic bending resistance only (W<sub>pl</sub> not tabulated for angles).
-      This check covers cross-section bending/shear only. Torsion, LTB and biaxial effects not included.
-    </p>`;
 
   el.innerHTML = `
     <div class="results-group">

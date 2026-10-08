@@ -124,8 +124,7 @@ export function renderDesignSummary(el, r, opts = {}) {
     if (r.shearUtil > 0.5) {
       highShearNote = `
         <p class="small muted">
-          V<sub>Ed</sub> / V<sub>pl,Rd</sub> &gt; 0.5.
-          Reduced f<sub>y</sub> used for bending (cl. 6.2.8)
+          High shear: reduced f<sub>y</sub> used for bending (cl. 6.2.8).
         </p>`;
     }
   }
@@ -194,7 +193,7 @@ function appendDeflectionInfo(el) {
       <span class="deflection-info__span">${ratioText}</span>
     </div>
     <p class="muted small">
-      Peak at x = ${fmt(xMax)} m · elastic, self-weight excluded · no limit applied.
+      x = ${fmt(xMax)} m · self-weight excluded · no limit set.
     </p>
   `;
 

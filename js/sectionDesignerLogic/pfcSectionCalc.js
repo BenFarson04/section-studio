@@ -52,7 +52,7 @@ export function runPfcDesignCheck() {
   const type  = document.getElementById("sectionTypeSelect")?.value;
 
   if (!sec || !grade) {
-    msg(container, "Select a section and grade to see utilisations.");
+    msg(container, "Select section and grade.");
     return null;
   }
 
@@ -89,7 +89,7 @@ export function runPfcDesignCheck() {
   const { h, b, tw, tf, r, d } = sec;
 
   if (!h || !b || !tw || !tf || !r || !d) {
-    msg(container, "Section geometry incomplete, cannot run checks.");
+    msg(container, "Incomplete section geometry.");
     return null;
   }
 
@@ -117,7 +117,7 @@ export function runPfcDesignCheck() {
   ) * 1e3;
 
   if (!A || !Wel || !Wpl) {
-    msg(container, "Section properties (A, Wel,y, Wpl,y) not found, cannot run checks.");
+    msg(container, "Missing section properties (A, W<sub>el,y</sub>, W<sub>pl,y</sub>).");
     return null;
   }
 
@@ -262,18 +262,9 @@ function render(el, r) {
     if (r.shearUtil > 0.5) {
       notes += `
         <p class="small muted">
-          V<sub>Ed</sub> / V<sub>pl,Rd</sub> &gt; 0.5.
-          Reduced f<sub>y</sub> used for bending (cl. 6.2.8)
+          High shear: reduced f<sub>y</sub> used for bending (cl. 6.2.8).
         </p>`;
     }
-  }
-
-  if (Number.isFinite(r.e0) && r.e0 > 0) {
-    notes += `
-      <p class="small muted">
-        Note: PFC has e<sub>0</sub> = ${r.e0.toFixed(2)} cm from web centre to shear centre.
-        This check is cross-section bending/shear only and does not include torsion.
-      </p>`;
   }
 
   el.innerHTML = `
