@@ -142,90 +142,163 @@
       transform-origin: 55% 54%;
     }
 
-    .structure-art .ground {
-      fill: url(#ground-wash);
-      stroke: #c6d7df;
-      stroke-width: 1;
-    }
-
-    .structure-art .surface {
-      fill: url(#surface-wash);
-      stroke: #8eafbd;
-      stroke-width: 1.2;
-    }
-
-    .structure-art .surface-side {
-      fill: #bad0d9;
-      fill-opacity: 0.24;
-      stroke: #a5c0cb;
-      stroke-width: 1;
-    }
-
-    .structure-art .beam-shadow {
+    .structure-art .art-fine {
       fill: none;
-      stroke: #86a9b7;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 8;
-      opacity: 0.2;
-    }
-
-    .structure-art .frame {
-      fill: none;
-      stroke: currentColor;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-width: 2.4;
-    }
-
-    .structure-art .frame-strong {
-      stroke: url(#member-tone);
-      stroke-width: 4;
-    }
-
-    .structure-art .secondary {
-      stroke: #7299a9;
-      stroke-width: 1.45;
-      opacity: 0.86;
-    }
-
-    .structure-art .fine {
-      fill: none;
-      stroke: #b3c7d0;
+      stroke: #9cbac8;
       stroke-width: 0.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
       opacity: 0.72;
     }
 
-    .structure-art .technical {
+    .structure-art .art-dashed {
       fill: none;
-      stroke: #8faebb;
+      stroke: #6f9fb2;
       stroke-width: 1;
-      stroke-dasharray: 2 5;
-      opacity: 0.8;
+      stroke-dasharray: 3 5;
+      stroke-linecap: round;
+      opacity: 0.74;
     }
 
-    .structure-art .node {
-      fill: #f8fbfc;
+    .structure-art .art-ground {
+      fill: url(#art-ground);
+      stroke: #afc8d2;
+      stroke-width: 1;
+    }
+
+    .structure-art .art-slab {
+      fill: url(#art-slab-top);
+      fill-opacity: 0.68;
+      stroke: #8fb1bf;
+      stroke-width: 1;
+    }
+
+    .structure-art .art-slab-edge {
+      fill: #b8d0da;
+      fill-opacity: 0.52;
+      stroke: #88aab8;
+      stroke-width: 0.85;
+    }
+
+    .structure-art .art-core {
+      fill: url(#art-core);
+      stroke: #4b8da5;
+      stroke-width: 1.1;
+    }
+
+    .structure-art .steel-underlay {
+      fill: none;
+      stroke: #c8dfe8;
+      stroke-width: 5.2;
+      stroke-linecap: square;
+      stroke-linejoin: round;
+      opacity: 0.84;
+    }
+
+    .structure-art .structural-steel {
+      fill: none;
+      stroke: url(#art-steel);
+      stroke-width: 2.7;
+      stroke-linecap: square;
+      stroke-linejoin: round;
+    }
+
+    .structure-art .tower-outline {
+      fill: none;
+      stroke: #104a66;
+      stroke-width: 1.45;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.88;
+    }
+
+    .structure-art .secondary-frame {
+      fill: none;
+      stroke: #4b8da5;
+      stroke-width: 1.45;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0.82;
+    }
+
+    .structure-art .joint {
+      fill: #f8fcfd;
       stroke: #176b87;
-      stroke-width: 1.8;
+      stroke-width: 1.35;
     }
 
-    .structure-art .node-core {
+    .structure-art .joint-core {
       fill: #176b87;
       stroke: none;
     }
 
-    .structure-art .load {
-      fill: none;
-      stroke: #5c8b9d;
-      stroke-width: 1.35;
+    .structure-art .callout-card {
+      fill: url(#art-card);
+      stroke: #a8c5d1;
+      stroke-width: 0.9;
     }
 
-    .structure-art .annotation {
-      fill: #72909e;
+    .structure-art .callout-rule {
+      fill: none;
+      stroke: #c4d7df;
+      stroke-width: 0.8;
+    }
+
+    .structure-art .engineering-label-strong {
+      fill: #315a6c;
       font-family: var(--font-mono);
-      font-size: 9px;
-      letter-spacing: 0.08em;
+      font-size: 7px;
+      font-weight: 700;
+      letter-spacing: 0.055em;
+    }
+
+    .structure-art .engineering-label {
+      fill: #668391;
+      font-family: var(--font-mono);
+      font-size: 6.4px;
+      letter-spacing: 0.035em;
+    }
+
+    .structure-art .engineering-micro {
+      fill: #829da9;
+      font-family: var(--font-mono);
+      font-size: 5.6px;
+      letter-spacing: 0.025em;
+    }
+
+    @media (max-width: 520px) {
+      .structure-art .engineering-label-strong {
+        font-size: 8.4px;
+      }
+
+      .structure-art .engineering-label {
+        font-size: 7.4px;
+      }
+
+      .structure-art .engineering-micro {
+        font-size: 6.6px;
+      }
+    }
+
+    .structure-art .diagram-fill {
+      fill: #82b2c2;
+      fill-opacity: 0.3;
+      stroke: none;
+    }
+
+    .structure-art .diagram-line {
+      fill: none;
+      stroke: #176b87;
+      stroke-width: 1.3;
+      stroke-linecap: round;
+    }
+
+    .structure-art .analysis-line {
+      fill: none;
+      stroke: #6f9fb2;
+      stroke-width: 0.9;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     @keyframes start-copy-in {
@@ -348,101 +421,188 @@
       </div>
 
       <svg class="structure-art" viewBox="0 0 640 500" role="img" aria-labelledby="structure-title structure-description">
-        <title id="structure-title">Three-dimensional structural frame study</title>
-        <desc id="structure-description">A perspective steel frame with shaded members, bracing, technical grid lines and applied load indicators.</desc>
+        <title id="structure-title">Isometric multi-storey structural model and analysis studies</title>
+        <desc id="structure-description">A four-storey braced steel frame with translucent floor plates, a concrete core, perspective grid and compact section and bending-moment studies.</desc>
         <defs>
-          <linearGradient id="surface-wash" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#f9fcfd" stop-opacity="0.96" />
-            <stop offset="1" stop-color="#c8dce4" stop-opacity="0.5" />
+          <radialGradient id="art-atmosphere" cx="55%" cy="45%" r="60%">
+            <stop offset="0" stop-color="#d9eaf0" stop-opacity="0.72" />
+            <stop offset="0.62" stop-color="#e7f1f4" stop-opacity="0.38" />
+            <stop offset="1" stop-color="#f2f5f7" stop-opacity="0" />
+          </radialGradient>
+          <linearGradient id="art-ground" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#e7f0f3" stop-opacity="0.82" />
+            <stop offset="1" stop-color="#d3e3e9" stop-opacity="0.52" />
           </linearGradient>
-          <linearGradient id="ground-wash" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#d9e8ed" stop-opacity="0.42" />
-            <stop offset="1" stop-color="#edf4f6" stop-opacity="0.08" />
+          <linearGradient id="art-steel" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#4b98b2" />
+            <stop offset="0.48" stop-color="#176b87" />
+            <stop offset="1" stop-color="#104a66" />
           </linearGradient>
-          <linearGradient id="member-tone" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stop-color="#3d839b" />
-            <stop offset="0.52" stop-color="#176b87" />
-            <stop offset="1" stop-color="#10536c" />
+          <linearGradient id="art-slab-top" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f8fcfd" stop-opacity="0.98" />
+            <stop offset="1" stop-color="#c8dfe8" stop-opacity="0.84" />
           </linearGradient>
-          <pattern id="floor-grid" width="28" height="20" patternUnits="userSpaceOnUse" patternTransform="skewY(19)">
-            <path d="M28 0H0V20" fill="none" stroke="#9bb7c2" stroke-width="0.65" opacity="0.6" />
+          <linearGradient id="art-core" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#176b87" stop-opacity="0.24" />
+            <stop offset="1" stop-color="#10536c" stop-opacity="0.53" />
+          </linearGradient>
+          <linearGradient id="art-card" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff" stop-opacity="0.94" />
+            <stop offset="1" stop-color="#f4f9fb" stop-opacity="0.88" />
+          </linearGradient>
+          <pattern id="art-ground-grid" width="24" height="18" patternUnits="userSpaceOnUse" patternTransform="skewY(14)">
+            <path d="M24 0H0V18" fill="none" stroke="#9cbac8" stroke-width="0.65" opacity="0.58" />
           </pattern>
         </defs>
 
-        <ellipse cx="347" cy="418" rx="242" ry="42" fill="#b7cdd6" opacity="0.14" />
-        <path class="ground" d="m42 397 309-120 257 81-310 125Z" />
-        <path d="m42 397 309-120 257 81-310 125Z" fill="url(#floor-grid)" opacity="0.76" />
-        <g class="fine">
-          <path d="m78 414 307-119m-269 144 309-120m-270 144 310-121" />
-          <path d="m120 367 259 82m42-115 259 82m-391-129 259 81" />
-          <path d="m94 385 316 99m50-115 105 33" />
+        <ellipse cx="355" cy="242" rx="258" ry="202" fill="url(#art-atmosphere)" />
+        <ellipse cx="337" cy="423" rx="210" ry="33" fill="#8eafbd" opacity="0.12" />
+        <path class="art-ground" d="m54 407 270-84 270 72-270 91Z" />
+        <path d="m54 407 270-84 270 72-270 91Z" fill="url(#art-ground-grid)" opacity="0.72" />
+        <g class="art-fine">
+          <path d="m94 419 244 65m44-77 244 65m-421-91 244 65m-55-142 171 46m-228-8 172 46" />
+          <path d="m100 393 247 77m-13-132 247 77m-386-2 269-84m-222 99 270-84m-222 99 270-84" />
         </g>
 
-        <g class="technical">
-          <path d="m125 177-38-48m38 48-1-20m-2 20 18-7" />
-          <path d="m491 106 65-18m-65 18 19-13m-19 13 20 5" />
-          <path d="m508 301 58 19m-58-19 17 12m-17-12 20-2" />
-          <path d="m78 317-35 14m35-14-18-3m18 3-15 11" />
+        <g class="art-dashed">
+          <path d="M212 350V162M220 350V162" />
+          <path d="M220 350h8m-8-47h8m-8-47h8m-8-47h8m-8-47h8" />
+          <path d="m212 350 4-7m-4 7-4-7m4-181 4 7m-4-7-4 7" />
+        </g>
+        <g class="engineering-micro">
+          <text x="190" y="259" transform="rotate(-90 190 259)">4 x 4.0 m</text>
         </g>
 
-        <g class="surface-side">
-          <path d="m130 315 128 50v-168l-128-50Z" />
-          <path d="m258 365 231-91V106l-231 91Z" />
-          <path d="m130 147 128 50 231-91-128-49Z" />
-        </g>
-        <path class="surface" d="m130 147 128 50 231-91-128-49Z" />
-        <g class="fine">
-          <path d="m175 164 230-91m-3 108 85-34m-173 69 129-51" />
-          <path d="m197 150 127 50m59-112 127 50" />
+        <g aria-hidden="true">
+          <path class="art-core" d="m314 155 23 8 28-13v188l-28 13-23-8Z" />
+          <path class="art-core" d="m337 163 28-13v188l-28 13Z" />
+          <path class="art-core" d="m314 155 28-13 23 8-28 13Z" />
+          <path class="art-fine" d="m314 202 23 8 28-13m-51 52 23 8 28-13m-51 52 23 8 28-13" />
+          <path class="art-fine" d="M320 158v188m11-184v188" />
         </g>
 
-        <g class="beam-shadow">
-          <path d="m130 147 128 50 231-91-128-49Z" />
-          <path d="m130 315 128 50 231-91-128-50Z" />
-          <path d="M130 315V147m128 218V197m231 77V106M361 224V57" />
-        </g>
-        <g class="frame frame-strong">
-          <path d="m130 315 128 50 231-91-128-50Z" />
-          <path d="m130 147 128 50 231-91-128-49Z" />
-          <path d="M130 315V147m128 218V197m231 77V106M361 224V57" />
-        </g>
-        <g class="secondary">
-          <path d="m130 147 128 218m0-168L130 315m128-118 231 77m0-168L258 365" />
-          <path d="m130 232 128 50 231-91M245 102l-115 45m244-2 115-45" />
-          <path d="m130 232 128-50m0 100 231-91m-231 41 231-91" />
-          <path d="m195 172v168m128-188v168m128-219v168" />
-        </g>
-        <g class="frame">
-          <path d="m130 315 128 50 231-91-128-50Z" />
-          <path d="m130 147 128 50 231-91-128-49Z" />
-          <path d="M130 315V147m128 218V197m231 77V106M361 224V57" />
-          <path d="m130 147 128 218m0-168L130 315m128-118 231 77m0-168L258 365" />
+        <g aria-hidden="true">
+          <path class="art-slab-edge" d="m228 303 100 36v4l-100-36Zm100 36 122-54v4l-122 54Z" />
+          <path class="art-slab" d="m228 303 100 36 122-54-100-36Z" />
+          <path class="art-slab-edge" d="m228 256 100 36v4l-100-36Zm100 36 122-54v4l-122 54Z" />
+          <path class="art-slab" d="m228 256 100 36 122-54-100-36Z" />
+          <path class="art-slab-edge" d="m228 209 100 36v4l-100-36Zm100 36 122-54v4l-122 54Z" />
+          <path class="art-slab" d="m228 209 100 36 122-54-100-36Z" />
+          <path class="art-slab-edge" d="m228 162 100 36v4l-100-36Zm100 36 122-54v4l-122 54Z" />
+          <path class="art-slab" d="m228 162 100 36 122-54-100-36Z" />
         </g>
 
-        <g class="node">
-          <circle cx="130" cy="147" r="5" /><circle class="node-core" cx="130" cy="147" r="1.6" />
-          <circle cx="258" cy="197" r="5" /><circle class="node-core" cx="258" cy="197" r="1.6" />
-          <circle cx="361" cy="57" r="5" /><circle class="node-core" cx="361" cy="57" r="1.6" />
-          <circle cx="489" cy="106" r="5" /><circle class="node-core" cx="489" cy="106" r="1.6" />
-          <circle cx="130" cy="315" r="5" /><circle class="node-core" cx="130" cy="315" r="1.6" />
-          <circle cx="258" cy="365" r="5" /><circle class="node-core" cx="258" cy="365" r="1.6" />
-          <circle cx="361" cy="224" r="5" /><circle class="node-core" cx="361" cy="224" r="1.6" />
-          <circle cx="489" cy="274" r="5" /><circle class="node-core" cx="489" cy="274" r="1.6" />
+        <g class="steel-underlay">
+          <path d="M228 350V162m100 224V198m122 134V144M350 296V108m-72 260V180m111 179V171m11 143V126m-111 197V135" />
         </g>
-        <g class="load">
-          <path d="M177 89v36m-4-7 4 7 4-7M286 107v36m-4-7 4 7 4-7M405 39v36m-4-7 4 7 4-7" />
-          <path d="m160 128 29 11m-29-11 6 6m-6-6 8-2m100 52 29 11m-29-11 6 6m-6-6 8-2m120-116 29 11m-29-11 6 6m-6-6 8-2" />
+        <g class="structural-steel">
+          <path d="M228 350V162m100 224V198m122 134V144M350 296V108m-72 260V180m111 179V171m11 143V126m-111 197V135" />
         </g>
-        <g class="technical">
-          <path d="m130 337v42m128-13v42m231-91v42" />
-          <path d="m112 385 18 7m0-7-18 7m146 0 17 7m-17-7 17 7m214-91 18 7m-18-7 18 7" />
+
+        <g class="secondary-frame">
+          <path d="m228 303 100 36 122-54-100-36Z" />
+          <path d="m228 256 100 36 122-54-100-36Z" />
+          <path d="m228 209 100 36 122-54-100-36Z" />
+          <path d="m228 162 100 36 122-54-100-36Z" />
+          <path d="M278 368 400 314M289 323 389 359M278 321 400 267M289 276 389 312M278 274 400 220M289 229 389 265M278 227 400 173M289 182 389 218M278 180 400 126M289 135 389 171" />
         </g>
-        <g class="annotation">
-          <text x="80" y="121">N1</text>
-          <text x="505" y="99">N4</text>
-          <text x="514" y="277">N8</text>
-          <text x="94" y="333">01 / FRAME STUDY</text>
-          <text x="430" y="406">LOAD CASE 01</text>
+
+        <g class="tower-outline">
+          <path d="m228 350 100 36 122-54-100-36-122 54Z" />
+          <path d="m228 303 100 36 122-54-100-36-122 54Z" />
+          <path d="m228 256 100 36 122-54-100-36-122 54Z" />
+          <path d="m228 209 100 36 122-54-100-36-122 54Z" />
+          <path d="m228 162 100 36 122-54-100-36-122 54Z" />
+          <path d="M228 350V162m100 224V198m122 134V144M350 296V108" />
+        </g>
+
+        <g class="secondary-frame">
+          <path d="M228 303 328 292M328 339 228 256M328 339 450 238M450 285 328 292" />
+          <path d="M328 292 450 191M450 238 328 245M350 249 228 256M350 202 228 303" />
+        </g>
+
+        <g class="joint">
+          <circle cx="228" cy="303" r="2.8" /><circle class="joint-core" cx="228" cy="303" r="0.8" />
+          <circle cx="328" cy="339" r="2.8" /><circle class="joint-core" cx="328" cy="339" r="0.8" />
+          <circle cx="450" cy="285" r="2.8" /><circle class="joint-core" cx="450" cy="285" r="0.8" />
+          <circle cx="350" cy="249" r="2.8" /><circle class="joint-core" cx="350" cy="249" r="0.8" />
+          <circle cx="228" cy="209" r="2.8" /><circle class="joint-core" cx="228" cy="209" r="0.8" />
+          <circle cx="328" cy="245" r="2.8" /><circle class="joint-core" cx="328" cy="245" r="0.8" />
+          <circle cx="450" cy="191" r="2.8" /><circle class="joint-core" cx="450" cy="191" r="0.8" />
+          <circle cx="350" cy="155" r="2.8" /><circle class="joint-core" cx="350" cy="155" r="0.8" />
+          <circle cx="228" cy="162" r="2.8" /><circle class="joint-core" cx="228" cy="162" r="0.8" />
+          <circle cx="328" cy="198" r="2.8" /><circle class="joint-core" cx="328" cy="198" r="0.8" />
+          <circle cx="450" cy="144" r="2.8" /><circle class="joint-core" cx="450" cy="144" r="0.8" />
+          <circle cx="350" cy="108" r="2.8" /><circle class="joint-core" cx="350" cy="108" r="0.8" />
+        </g>
+
+        <g class="analysis-line">
+          <path d="M274 92v41m-3-6 3 6 3-6m35-51v45m-3-6 3 6 3-6m36-55v43m-3-6 3 6 3-6" />
+          <path d="m263 87 11 5m-11-5 5 5m-5-5 6-1m37-16 9 4m-9-4 4 4m-4-4 5-1m29-17 9 4m-9-4 4 4m-4-4 5-1" />
+        </g>
+        <g class="engineering-label">
+          <text x="266" y="82">Gk</text>
+          <text x="311" y="67">Gk</text>
+          <text x="348" y="60">Qk</text>
+        </g>
+
+        <g class="art-dashed">
+          <path d="M454 144h8m-8 47h8m-8 47h8m-8 47h8m-8 47h8" />
+        </g>
+        <g class="engineering-micro">
+          <text x="465" y="141">04</text>
+          <text x="465" y="188">03</text>
+          <text x="465" y="235">02</text>
+          <text x="465" y="282">01</text>
+          <text x="465" y="329">00</text>
+        </g>
+        <g class="art-fine">
+          <path d="m451 175 29-35h8m-8-3v6" />
+        </g>
+
+        <g class="art-fine">
+          <path d="m183 130 40 29m-40-29 11 1m-11-1 5 10m302 19 29-19m-29 19 11-1m-11 1 5-10" />
+          <path d="M18 24h10M18 24v10m604-10h-10m10 0v10M18 476h10m-10 0v-10m604 10h-10m10 0v-10" />
+        </g>
+
+        <g aria-label="Section study panel">
+          <rect class="callout-card" x="16" y="34" width="168" height="120" rx="4" />
+          <path class="callout-rule" d="M16 57h168" />
+          <text class="engineering-label-strong" x="27" y="49">SECTION STUDY / S01</text>
+          <path d="M55 76h32v7H74v25h13v7H55v-7h13V83H55Z" fill="url(#art-steel)" stroke="#104a66" stroke-width="0.8" />
+          <path class="art-fine" d="M50 71h42m-37-3v7m32-7v7M55 122h32m-26-3v6m20-6v6M48 80v31m-3-27h6m-6 23h6" />
+          <path class="art-fine" d="m48 74 2-3 2 3m36 0 2-3 2 3m-42 34 2 3 2-3m21 0 2 3 2-3" />
+          <text class="engineering-label-strong" x="101" y="82">UB 310 x 46</text>
+          <text class="engineering-label" x="101" y="95">GRADE 300</text>
+          <text class="engineering-micro" x="101" y="107">h 310 mm</text>
+          <text class="engineering-micro" x="101" y="117">b 166 mm</text>
+          <text class="engineering-micro" x="101" y="137">SCHEMATIC PROFILE</text>
+        </g>
+
+        <g aria-label="Bending moment analysis panel">
+          <rect class="callout-card" x="17" y="286" width="174" height="101" rx="4" />
+          <path class="callout-rule" d="M17 309h174" />
+          <text class="engineering-label-strong" x="28" y="301">ANALYSIS / LC01</text>
+          <path class="analysis-line" d="M34 345h140m0-7v31M34 338v38" />
+          <path class="diagram-fill" d="M35 345c19 0 21 23 69 23s51-23 69-23Z" />
+          <path class="diagram-line" d="M35 345c19 0 21 23 69 23s51-23 69-23" />
+          <path class="art-fine" d="M104 368v7m-3-3 3 3 3-3" />
+          <text class="engineering-label-strong" x="28" y="378">BENDING MOMENT</text>
+          <text class="engineering-micro" x="132" y="378">Mmax 42.8</text>
+        </g>
+
+        <g aria-label="Concrete core panel">
+          <rect class="callout-card" x="488" y="39" width="136" height="101" rx="4" />
+          <path class="callout-rule" d="M488 62h136" />
+          <text class="engineering-label-strong" x="499" y="54">CORE / C01</text>
+          <path d="m502 78 15-7 10 4-15 7Z" fill="#a8c6d2" stroke="#4b8da5" stroke-width="0.7" />
+          <path d="M502 78v33l10 4V82Z" fill="#c8dfe8" stroke="#4b8da5" stroke-width="0.7" />
+          <path d="m512 82 15-7v33l-15 7Z" fill="url(#art-core)" stroke="#4b8da5" stroke-width="0.7" />
+          <path class="art-fine" d="m502 89 10 4 15-7m-15 17 15-7" />
+          <text class="engineering-label-strong" x="535" y="82">RC 400 x 400</text>
+          <text class="engineering-label" x="535" y="95">f'c 40 MPa</text>
+          <text class="engineering-micro" x="535" y="108">LATERAL CORE</text>
+          <text class="engineering-micro" x="499" y="129">CONCRETE / C40</text>
         </g>
       </svg>
     </section>
