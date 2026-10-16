@@ -13,40 +13,85 @@
     }
 
     .start-main {
+      position: relative;
+      isolation: isolate;
       display: grid;
-      width: min(1120px, calc(100% - 40px));
+      width: min(1280px, calc(100% - 64px));
       flex: 1;
       align-items: center;
       margin: 0 auto;
-      padding: clamp(40px, 8vh, 88px) 0;
+      padding: clamp(44px, 7vh, 82px) 0;
     }
 
     .start-hero {
+      position: relative;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(320px, 0.92fr);
+      grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
       align-items: center;
-      gap: clamp(32px, 6vw, 76px);
+      gap: clamp(28px, 4vw, 58px);
+    }
+
+    .start-hero::before {
+      position: absolute;
+      z-index: -1;
+      top: 50%;
+      right: -12%;
+      width: 74%;
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(219, 235, 241, 0.72), rgba(232, 241, 245, 0.32) 45%, transparent 72%);
+      content: "";
+      transform: translateY(-50%);
+      pointer-events: none;
     }
 
     .start-copy {
-      max-width: 510px;
+      position: relative;
+      z-index: 1;
+      max-width: 520px;
+      animation: start-copy-in 650ms var(--ease) both;
+    }
+
+    .start-copy > .start-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 0 20px;
+      color: var(--accent);
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .start-kicker::before {
+      width: 25px;
+      height: 1px;
+      background: currentColor;
+      content: "";
     }
 
     .start-copy h1 {
-      max-width: 11ch;
+      max-width: 12ch;
       margin: 0;
       color: var(--ink);
-      font-size: clamp(2.35rem, 3.5vw, 3.35rem);
-      line-height: 1.08;
-      letter-spacing: -0.055em;
+      font-size: clamp(2.8rem, 4.25vw, 4.25rem);
+      font-weight: 650;
+      line-height: 1.02;
+      letter-spacing: -0.065em;
+    }
+
+    .start-copy h1 span {
+      color: var(--accent);
     }
 
     .start-copy p {
-      max-width: 43ch;
-      margin: 20px 0 0;
+      max-width: 40ch;
+      margin: 23px 0 0;
       color: var(--ink-muted);
-      font-size: 1rem;
-      line-height: 1.7;
+      font-size: 1.04rem;
+      line-height: 1.75;
     }
 
     .start-action {
@@ -55,31 +100,74 @@
       justify-content: center;
       gap: 12px;
       min-height: 56px;
-      margin-top: 30px;
-      padding: 15px 25px;
-      border-radius: var(--radius-md);
+      margin-top: 32px;
+      padding: 15px 23px 15px 25px;
+      border-radius: var(--radius-lg);
       font-size: 0.98rem;
       font-weight: 700;
       letter-spacing: 0.005em;
-      box-shadow: 0 4px 12px rgba(16, 83, 108, 0.17);
-      transition: transform var(--t-fast), box-shadow var(--t-fast);
+      box-shadow: 0 8px 20px rgba(16, 83, 108, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+      transition: transform var(--t-base), box-shadow var(--t-base);
     }
 
     .start-action:hover {
-      box-shadow: 0 7px 18px rgba(16, 83, 108, 0.22);
-      transform: translateY(-2px);
+      box-shadow: 0 12px 26px rgba(16, 83, 108, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transform: translateY(-3px);
+    }
+
+    .start-action:active {
+      transform: translateY(-1px);
     }
 
     .start-action svg {
       width: 18px;
       height: 18px;
+      transition: transform var(--t-base);
+    }
+
+    .start-action:hover svg {
+      transform: translateX(3px);
     }
 
     .structure-art {
+      position: relative;
+      z-index: 0;
+      display: block;
       width: 100%;
-      max-height: 430px;
+      max-height: 560px;
       overflow: visible;
       color: var(--accent);
+      filter: drop-shadow(0 22px 22px rgba(27, 76, 96, 0.08));
+      animation: start-art-in 900ms 100ms var(--ease) both;
+      transform-origin: 55% 54%;
+    }
+
+    .structure-art .ground {
+      fill: url(#ground-wash);
+      stroke: #c6d7df;
+      stroke-width: 1;
+    }
+
+    .structure-art .surface {
+      fill: url(#surface-wash);
+      stroke: #8eafbd;
+      stroke-width: 1.2;
+    }
+
+    .structure-art .surface-side {
+      fill: #bad0d9;
+      fill-opacity: 0.24;
+      stroke: #a5c0cb;
+      stroke-width: 1;
+    }
+
+    .structure-art .beam-shadow {
+      fill: none;
+      stroke: #86a9b7;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 8;
+      opacity: 0.2;
     }
 
     .structure-art .frame {
@@ -87,65 +175,146 @@
       stroke: currentColor;
       stroke-linecap: round;
       stroke-linejoin: round;
-      stroke-width: 2;
+      stroke-width: 2.4;
+    }
+
+    .structure-art .frame-strong {
+      stroke: url(#member-tone);
+      stroke-width: 4;
     }
 
     .structure-art .secondary {
-      stroke: #85aab8;
-      stroke-width: 1.5;
+      stroke: #7299a9;
+      stroke-width: 1.45;
+      opacity: 0.86;
     }
 
     .structure-art .fine {
-      stroke: #bdcdd4;
+      fill: none;
+      stroke: #b3c7d0;
+      stroke-width: 0.9;
+      opacity: 0.72;
+    }
+
+    .structure-art .technical {
+      fill: none;
+      stroke: #8faebb;
       stroke-width: 1;
+      stroke-dasharray: 2 5;
+      opacity: 0.8;
     }
 
     .structure-art .node {
-      fill: #fff;
-      stroke: currentColor;
-      stroke-width: 2;
+      fill: #f8fbfc;
+      stroke: #176b87;
+      stroke-width: 1.8;
+    }
+
+    .structure-art .node-core {
+      fill: #176b87;
+      stroke: none;
     }
 
     .structure-art .load {
       fill: none;
-      stroke: #6f98a8;
-      stroke-width: 1.5;
+      stroke: #5c8b9d;
+      stroke-width: 1.35;
     }
 
-    @media (max-width: 760px) {
+    .structure-art .annotation {
+      fill: #72909e;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.08em;
+    }
+
+    @keyframes start-copy-in {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes start-art-in {
+      from {
+        opacity: 0;
+        transform: translateY(12px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @media (max-width: 880px) {
       .start-main {
-        width: min(560px, calc(100% - 36px));
-        padding: 54px 0 42px;
+        width: min(620px, calc(100% - 36px));
+        padding: 50px 0 42px;
       }
 
       .start-hero {
         grid-template-columns: 1fr;
-        gap: 28px;
+        gap: 12px;
+      }
+
+      .start-hero::before {
+        top: auto;
+        right: -18%;
+        bottom: -8%;
+        width: 100%;
+        transform: none;
+      }
+
+      .start-copy {
+        max-width: 560px;
       }
 
       .start-copy h1 {
-        max-width: 13ch;
-        font-size: clamp(2.25rem, 8vw, 3rem);
+        max-width: 12ch;
+        font-size: clamp(2.65rem, 8vw, 3.6rem);
       }
 
       .structure-art {
-        width: min(100%, 430px);
-        max-height: 300px;
+        width: min(112%, 570px);
+        max-height: 380px;
         justify-self: center;
+        margin-top: -2px;
       }
     }
 
     @media (max-width: 420px) {
       .start-main {
         width: calc(100% - 32px);
+        padding-top: 42px;
       }
 
       .start-copy h1 {
-        font-size: 2.2rem;
+        font-size: 2.55rem;
+      }
+
+      .start-copy p {
+        margin-top: 17px;
+        font-size: 0.96rem;
       }
 
       .start-action {
         width: 100%;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .start-copy,
+      .structure-art {
+        animation: none;
+      }
+
+      .start-action,
+      .start-action svg {
+        transition: none;
       }
     }
   </style>
@@ -167,7 +336,8 @@
   <main class="start-main">
     <section class="start-hero" aria-labelledby="welcome-heading">
       <div class="start-copy">
-        <h1 id="welcome-heading">A clearer way to design structures.</h1>
+        <p class="start-kicker">Structural design, made clear</p>
+        <h1 id="welcome-heading">A clearer way to design <span>structures.</span></h1>
         <p>Model a beam, explore its response, and develop a section design in one focused workspace.</p>
         <a href="index.html" class="btn btn--primary start-action">
           Start Designing
@@ -177,37 +347,102 @@
         </a>
       </div>
 
-      <svg class="structure-art" viewBox="0 0 520 420" role="img" aria-labelledby="structure-title">
-        <title id="structure-title">Structural frame wireframe</title>
+      <svg class="structure-art" viewBox="0 0 640 500" role="img" aria-labelledby="structure-title structure-description">
+        <title id="structure-title">Three-dimensional structural frame study</title>
+        <desc id="structure-description">A perspective steel frame with shaded members, bracing, technical grid lines and applied load indicators.</desc>
+        <defs>
+          <linearGradient id="surface-wash" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#f9fcfd" stop-opacity="0.96" />
+            <stop offset="1" stop-color="#c8dce4" stop-opacity="0.5" />
+          </linearGradient>
+          <linearGradient id="ground-wash" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#d9e8ed" stop-opacity="0.42" />
+            <stop offset="1" stop-color="#edf4f6" stop-opacity="0.08" />
+          </linearGradient>
+          <linearGradient id="member-tone" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#3d839b" />
+            <stop offset="0.52" stop-color="#176b87" />
+            <stop offset="1" stop-color="#10536c" />
+          </linearGradient>
+          <pattern id="floor-grid" width="28" height="20" patternUnits="userSpaceOnUse" patternTransform="skewY(19)">
+            <path d="M28 0H0V20" fill="none" stroke="#9bb7c2" stroke-width="0.65" opacity="0.6" />
+          </pattern>
+        </defs>
+
+        <ellipse cx="347" cy="418" rx="242" ry="42" fill="#b7cdd6" opacity="0.14" />
+        <path class="ground" d="m42 397 309-120 257 81-310 125Z" />
+        <path d="m42 397 309-120 257 81-310 125Z" fill="url(#floor-grid)" opacity="0.76" />
         <g class="fine">
-          <path d="M58 346h390M83 366h390M106 386h390" />
-          <path d="M88 330v56m70-56v56m70-56v56m70-56v56m70-56v56m70-56v56" />
+          <path d="m78 414 307-119m-269 144 309-120m-270 144 310-121" />
+          <path d="m120 367 259 82m42-115 259 82m-391-129 259 81" />
+          <path d="m94 385 316 99m50-115 105 33" />
+        </g>
+
+        <g class="technical">
+          <path d="m125 177-38-48m38 48-1-20m-2 20 18-7" />
+          <path d="m491 106 65-18m-65 18 19-13m-19 13 20 5" />
+          <path d="m508 301 58 19m-58-19 17 12m-17-12 20-2" />
+          <path d="m78 317-35 14m35-14-18-3m18 3-15 11" />
+        </g>
+
+        <g class="surface-side">
+          <path d="m130 315 128 50v-168l-128-50Z" />
+          <path d="m258 365 231-91V106l-231 91Z" />
+          <path d="m130 147 128 50 231-91-128-49Z" />
+        </g>
+        <path class="surface" d="m130 147 128 50 231-91-128-49Z" />
+        <g class="fine">
+          <path d="m175 164 230-91m-3 108 85-34m-173 69 129-51" />
+          <path d="m197 150 127 50m59-112 127 50" />
+        </g>
+
+        <g class="beam-shadow">
+          <path d="m130 147 128 50 231-91-128-49Z" />
+          <path d="m130 315 128 50 231-91-128-50Z" />
+          <path d="M130 315V147m128 218V197m231 77V106M361 224V57" />
+        </g>
+        <g class="frame frame-strong">
+          <path d="m130 315 128 50 231-91-128-50Z" />
+          <path d="m130 147 128 50 231-91-128-49Z" />
+          <path d="M130 315V147m128 218V197m231 77V106M361 224V57" />
         </g>
         <g class="secondary">
-          <path d="M104 299 225 346 420 270 300 225Z" />
-          <path d="M104 170 225 215 420 139 300 94Z" />
-          <path d="M104 299V170m121 176V215m195 55V139M300 225V94" />
-          <path d="M104 170 225 215 300 94m-75 121 195-76M104 299l196-74m0-131 120 45" />
+          <path d="m130 147 128 218m0-168L130 315m128-118 231 77m0-168L258 365" />
+          <path d="m130 232 128 50 231-91M245 102l-115 45m244-2 115-45" />
+          <path d="m130 232 128-50m0 100 231-91m-231 41 231-91" />
+          <path d="m195 172v168m128-188v168m128-219v168" />
         </g>
         <g class="frame">
-          <path d="M104 299 225 346 420 270 300 225Z" />
-          <path d="M104 170 225 215 420 139 300 94Z" />
-          <path d="M104 299V170m121 176V215m195 55V139M300 225V94" />
-          <path d="M104 170 225 346m0-131L104 299m196-74L420 139m0 131L300 94" />
+          <path d="m130 315 128 50 231-91-128-50Z" />
+          <path d="m130 147 128 50 231-91-128-49Z" />
+          <path d="M130 315V147m128 218V197m231 77V106M361 224V57" />
+          <path d="m130 147 128 218m0-168L130 315m128-118 231 77m0-168L258 365" />
         </g>
+
         <g class="node">
-          <circle cx="104" cy="170" r="4" />
-          <circle cx="225" cy="215" r="4" />
-          <circle cx="300" cy="94" r="4" />
-          <circle cx="420" cy="139" r="4" />
-          <circle cx="104" cy="299" r="4" />
-          <circle cx="225" cy="346" r="4" />
-          <circle cx="300" cy="225" r="4" />
-          <circle cx="420" cy="270" r="4" />
+          <circle cx="130" cy="147" r="5" /><circle class="node-core" cx="130" cy="147" r="1.6" />
+          <circle cx="258" cy="197" r="5" /><circle class="node-core" cx="258" cy="197" r="1.6" />
+          <circle cx="361" cy="57" r="5" /><circle class="node-core" cx="361" cy="57" r="1.6" />
+          <circle cx="489" cy="106" r="5" /><circle class="node-core" cx="489" cy="106" r="1.6" />
+          <circle cx="130" cy="315" r="5" /><circle class="node-core" cx="130" cy="315" r="1.6" />
+          <circle cx="258" cy="365" r="5" /><circle class="node-core" cx="258" cy="365" r="1.6" />
+          <circle cx="361" cy="224" r="5" /><circle class="node-core" cx="361" cy="224" r="1.6" />
+          <circle cx="489" cy="274" r="5" /><circle class="node-core" cx="489" cy="274" r="1.6" />
         </g>
         <g class="load">
-          <path d="M148 91v38m-5-7 5 7 5-7M247 105v38m-5-7 5 7 5-7M346 67v38m-5-7 5 7 5-7" />
-          <path d="M132 148h32m-32 0 5-4m-5 4 5 4M231 193h32m-32 0 5-4m-5 4 5 4M330 72h32m-32 0 5-4m-5 4 5 4" />
+          <path d="M177 89v36m-4-7 4 7 4-7M286 107v36m-4-7 4 7 4-7M405 39v36m-4-7 4 7 4-7" />
+          <path d="m160 128 29 11m-29-11 6 6m-6-6 8-2m100 52 29 11m-29-11 6 6m-6-6 8-2m120-116 29 11m-29-11 6 6m-6-6 8-2" />
+        </g>
+        <g class="technical">
+          <path d="m130 337v42m128-13v42m231-91v42" />
+          <path d="m112 385 18 7m0-7-18 7m146 0 17 7m-17-7 17 7m214-91 18 7m-18-7 18 7" />
+        </g>
+        <g class="annotation">
+          <text x="80" y="121">N1</text>
+          <text x="505" y="99">N4</text>
+          <text x="514" y="277">N8</text>
+          <text x="94" y="333">01 / FRAME STUDY</text>
+          <text x="430" y="406">LOAD CASE 01</text>
         </g>
       </svg>
     </section>
