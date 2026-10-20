@@ -14,7 +14,6 @@
 import { getBeamLength, loadBendingFromSession } from "../state/store.js";
 import { solveReactions } from "../analysis/reactions.js";
 
-/* Local copy to avoid a circular import with sectionCalcShared.js */
 function firstNumber(...vals) {
   for (const v of vals) {
     const n = Number(v);

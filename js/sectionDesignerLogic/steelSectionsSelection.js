@@ -77,7 +77,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const [key] = entries[i];
       if (result.status === "fulfilled") {
         sectionTypes[key].data = result.value;
-        console.log(`✅ ${key} sections loaded: ${result.value.length}`);
       } else {
         console.error(`❌ Failed to load ${key}:`, result.reason);
       }
@@ -160,7 +159,6 @@ document.addEventListener("DOMContentLoaded", () => {
           console.warn(`⚠️ No drawing function registered for type "${type}"`);
         }
 
-        console.log(`✅ Selected ${type} section:`, sec);
       });
 
       list.appendChild(item);

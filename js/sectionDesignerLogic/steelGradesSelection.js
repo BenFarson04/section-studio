@@ -59,7 +59,6 @@ document.addEventListener("DOMContentLoaded", () => {
       gradeDisplay.textContent = `${grade.label}:  fy = ${fy} MPa,  fu = ${fu} MPa  (${band})`;
     }
 
-    console.log(`✅ Steel grade set: ${grade.label}, fy=${fy}, fu=${fu}  [${band}]`);
   }
 
   /* ─── Section Change Observer ────────────────────────────── */

@@ -8,7 +8,6 @@ const files = [
   'js/main.js',
   'js/state/manualDesignerMaterialToggle.js',
   'js/sectionDesignerLogic/concreteSectionCalc.js',
-  'js/sectionDesignerLogic/sectionCalcShared.js',
   'js/sectionDesignerLogic/chsSectionCalc.js',
   'js/sectionDesignerLogic/shsRhsSectionCalc.js',
   'js/sectionDesignerLogic/eaUaSectionCalc.js',

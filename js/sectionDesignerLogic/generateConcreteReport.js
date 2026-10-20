@@ -253,18 +253,13 @@ class Cursor {
 
   ensure(pts = PG.bLine) {
     if (this.y - pts < PG.bodyBot) {
-      console.log('CURSOR page break before', pts, 'pageNum', this.pageNum, 'y', this.y, 'extraPagesLeft', this.extraPages.length);
       const tpl = this.extraPages.shift();
 
       if (tpl) {
-        const prevPage = this.page;
         this.doc.addPage(tpl);
         this.page = tpl;
-        console.log('added copied template page; sameAsPrev?', this.page === prevPage, 'pageObjSameAsExtra?', this.extraPages[0] === tpl);
       } else {
-        const prevPage = this.page;
         this.page = this.doc.addPage([595.28, 841.89]);
-        console.log('added fresh page; sameAsPrev?', this.page === prevPage);
       }
 
       this.pageNum++;
@@ -278,7 +273,6 @@ class Cursor {
           sheetNo: String(this.pageNum)
         }
       );
-      console.log('CURSOR page break complete, new pageNum', this.pageNum, 'docPages', this.doc.getPages().length, 'currentIsFirst?', this.page === this.doc.getPages()[0]);
     }
   }
 
@@ -635,7 +629,6 @@ function drawBendingCheck(c, check, sectionNumber) {
     ? "Sagging bending check — bottom steel in tension"
     : "Hogging bending check — top steel in tension";
 
-  console.log('DRAW_BENDING_CHECK start', check.momentType, 'sectionNumber', sectionNumber, 'pageNum', c.pageNum, 'y', c.y);
   heading(c, `${sectionNumber}.  ${title}`);
 
   if (!check?.isValid) {
@@ -867,9 +860,7 @@ function drawBendingCheck(c, check, sectionNumber) {
 let concreteReportGenerationPromise = null;
 
 export async function generateConcreteReport() {
-  console.log('generateConcreteReport called, inFlight', !!concreteReportGenerationPromise);
   if (concreteReportGenerationPromise) {
-    console.log('generateConcreteReport returning existing promise');
     return concreteReportGenerationPromise;
   }
 
@@ -1296,4 +1287,3 @@ export async function generateConcreteReport() {
 /* ═══════════════════════════════════════════════════════════
  *  INITIALISATION
  * ═══════════════════════════════════════════════════════════ */
-

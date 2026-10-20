@@ -304,7 +304,6 @@ export function prepareCanvas(section, canvasId = "beamCanvas") {
     ctx.font         = FONT.error;
     ctx.textBaseline = "top";
     ctx.fillText("Missing h, b, tw or tf — check section object.", 20, 18);
-    console.log("Section keys:", Object.keys(section));
     return null;
   }
 
